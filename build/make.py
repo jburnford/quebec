@@ -203,8 +203,8 @@ payload = {
                "cc": p["cc"]}
               for p in ports.to_dict("records")],
     "voyages": voyages,
-    "vnames": df["vname"].fillna("").tolist(),
-    "vrigs": df["vrig"].fillna("").tolist(),
+    # vessel names/rigs are parsed above but not shipped: nothing in the page
+    # uses them since the arrivals ticker was removed, and they cost ~300 KB.
     "yearly": yearly,
 }
 

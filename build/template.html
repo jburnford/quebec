@@ -44,18 +44,16 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .bar{grid-column:1/-1;height:5px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden;order:3;margin-bottom:7px}
 .barIn{height:100%;border-radius:3px;width:0;transition:width .25s linear}
 
-#ticker{left:26px;bottom:172px;width:290px;pointer-events:none;transition:opacity .4s}
-.tk{font-size:12.5px;line-height:1.45;color:var(--ink-2);margin-bottom:5px;opacity:0;transform:translateY(4px);
-    animation:tkin .45s ease forwards}
-.tk b{color:var(--ink);font-weight:600}
-.tk .n{color:var(--ink-3);font-variant-numeric:tabular-nums}
-@keyframes tkin{to{opacity:1;transform:none}}
-
 #note{left:26px;top:min(34vh,270px);max-width:352px;pointer-events:none;opacity:0;transition:opacity .55s}
 #note.on{opacity:1}
 /* In Act I the whole western Atlantic carries traffic — the Caribbean routes run
    up the left side — so the caption moves to the eastern side, which is empty. */
-#note.east{left:auto;right:26px;top:min(58vh,500px);max-width:330px}
+/* Act I fills the western Atlantic with the Caribbean and coastal runs, and the
+   east side with the seven-row cargo panel. The one clear band is across the
+   top, between the masthead and the readout, above the traffic. */
+#note.east{left:50%;right:auto;transform:translateX(-50%);top:20px;
+  max-width:min(520px,calc(100vw - 830px))}
+#panel.hi{top:min(25vh,200px)}
 /* the note sits over the busiest part of the map, so it carries its own surface */
 #note{background:rgba(9,18,25,.80);backdrop-filter:blur(10px);
   border:1px solid var(--rule);border-left:2px solid var(--s4);
@@ -134,7 +132,8 @@ td{color:var(--ink-2)} td:first-child{color:var(--ink)}
 #notes li{margin-bottom:7px} #notes a{color:var(--s1)}
 
 @media (max-width:1100px){
-  #panel,#ticker{display:none}
+  #panel{display:none}
+  #note.east{left:16px;right:16px;transform:none;max-width:none;top:min(30vh,210px)}
   #head{max-width:min(64vw,42ch);padding:16px}
   #read{padding:16px}
   #note{max-width:min(72vw,330px)}
@@ -144,12 +143,11 @@ td{color:var(--ink-2)} td:first-child{color:var(--ink)}
 }
 @media (max-width:760px){
   #note,#note.east{max-width:none;left:16px;right:16px;position:absolute;
-        top:min(30vh,210px);bottom:auto}
+        top:min(30vh,210px);bottom:auto;transform:none}
   #actTitle{font-size:20px} #actSub{font-size:12.5px}
   #legend{font-size:11px}
   button{padding:6px 10px;font-size:12px}
 }
-@media (prefers-reduced-motion:reduce){ .tk{animation:none;opacity:1;transform:none} }
 </style>
 </head>
 <body>
@@ -179,7 +177,6 @@ td{color:var(--ink-2)} td:first-child{color:var(--ink)}
   </div>
 
   <div class="ui" id="note"><div id="noteYear"></div><div id="noteBody"></div></div>
-  <div class="ui" id="ticker"></div>
 
   <div class="ui" id="bar">
     <div id="legend"></div>
@@ -447,20 +444,151 @@ let act=1,vt=0,playing=true,speedIx=0,raf=0,last=0,dragging=false;
 let list=LIST1,spawnPtr=0,arrPtr=0,arcs=[];
 let cumVoy=0,cumSet=0,cumCargo=new Array(7).fill(0),cumReg={},seasonVoy=0,seasonSet=0,curYear=0;
 const portAcc=new Float64Array(P.length); let portMax=1;
-let noteIx=-1,noteUntil=-1,tickLog=[],tickDirty=false,uiAcc=0;
+let noteIx=-1,noteUntil=-1,uiAcc=0;
 let flow=[];
 
-const bezier=(()=>{ const cache=new Map();
-  return pi=>{
-    let c=cache.get(pi);
-    if(c&&c.sc===SC&&c.ox===OX&&c.oy===OY) return c;
-    const p=P[pi],x0=px(p.lon),y0=py(p.lat),x1=px(QLON),y1=py(QLAT);
-    const dx=x1-x0,dy=y1-y0,len=Math.hypot(dx,dy)||1,bulge=Math.min(len*.19,130);
-    c={x0,y0,x1,y1,cx:(x0+x1)/2+(dy/len)*bulge,cy:(y0+y1)/2-(dx/len)*bulge,sc:SC,ox:OX,oy:OY};
-    cache.set(pi,c);return c;
-  };})();
-const bezAt=(b,t)=>{const u=1-t;
-  return [u*u*b.x0+2*u*t*b.cx+t*t*b.x1,u*u*b.y0+2*u*t*b.cy+t*t*b.y1];};
+/* ======================= sea lanes =======================
+   Ships did not fly over Ireland. Every voyage in this record converges on one
+   funnel — round Newfoundland, through the Cabot Strait, up the Gulf and the
+   river — so routes are built as a shared TRUNK plus a handful of approach
+   lanes, rather than a curve per ship. Waypoints are [lat,lon], hand-placed in
+   open water; the last hop from a lane head to the quay is drawn straight.   */
+const TRUNK=[
+  [46.81,-71.21],[47.30,-70.30],[48.00,-69.30],[48.70,-68.20],[49.30,-67.00],
+  [49.55,-65.30],[49.20,-63.40],[48.40,-61.40],[47.30,-59.90],[47.00,-57.60],
+  [46.60,-55.00],[46.35,-52.40],[46.70,-48.00]
+];
+const CABOT=8, RACE=11, GATE=12;          // branch points along the trunk
+const trunkTo=i=>TRUNK.slice(0,i+1);
+
+const L_CHAN  =[...trunkTo(GATE),[47.4,-38],[48.2,-28],[48.9,-18],[49.3,-11],[49.6,-7.5],[49.9,-5.6]];
+const L_THAMES=[...L_CHAN,[50.1,-3.0],[50.4,0.0],[51.05,1.60],[51.62,1.45]];
+const L_NSEA  =[...L_THAMES,[52.0,2.0],[53.5,1.8],[54.8,0.2],[55.2,-1.2]];
+const LANES={
+  IE_W  :[...trunkTo(GATE),[47.8,-40],[48.8,-32],[49.6,-24],[50.3,-17],[51.4,-12.5],[52.6,-10.4]],
+  IE_NW :[...trunkTo(GATE),[47.8,-40],[48.8,-32],[49.6,-24],[50.3,-17],[51.4,-12.5],
+          [52.9,-11.0],[53.9,-10.5],[54.4,-9.3]],
+  IE_S  :[...trunkTo(GATE),[47.6,-40],[48.4,-31],[49.2,-22],[49.9,-15],[50.5,-11.0],
+          [51.0,-9.4],[51.35,-8.4]],
+  IRISH :[...trunkTo(GATE),[47.6,-40],[48.4,-31],[49.2,-22],[49.8,-14],[50.4,-9.5],
+          [50.9,-7.0],[51.4,-6.0],[52.4,-5.7],[53.4,-5.4]],
+  NCH   :[...trunkTo(GATE),[48.5,-40],[51.0,-30],[53.5,-20],[55.0,-13.0],[55.7,-9.5],
+          [55.5,-7.2],[55.3,-5.9]],
+  CHAN  :L_CHAN,
+  BRIS  :[...L_CHAN,[50.3,-6.3],[51.1,-6.0],[51.3,-5.1],[51.4,-4.6]],
+  THAMES:L_THAMES,
+  NSEA  :L_NSEA,
+  ABDN  :[...L_NSEA,[56.5,-1.6],[57.6,-1.6]],
+  IBER  :[...trunkTo(GATE),[46.0,-40],[45.0,-30],[43.5,-22],[42.0,-15],[40.0,-11.5],[38.5,-10.2]],
+  /* the Caribbean run splits: west of the Antilles through the Windward Passage
+     for Jamaica, east of them for the Lesser Antilles and Demerara */
+  WI_W  :[...trunkTo(CABOT),[45.0,-58.0],[42.5,-60.0],[39.5,-64.5],[35.0,-68.5],
+          [30.0,-71.0],[25.0,-72.5],[21.5,-73.5],[19.6,-74.6],[18.3,-76.2]],
+  WI_E  :[...trunkTo(CABOT),[45.0,-58.0],[42.5,-60.0],[39.0,-62.0],[33.0,-62.0],
+          [26.0,-61.5],[20.0,-60.5],[15.0,-60.0],[12.0,-60.5]],
+  BERM  :[...trunkTo(CABOT),[45.0,-58.0],[42.5,-60.0],[38.0,-62.5],[34.0,-64.0],[32.6,-64.6]],
+  USE   :[...trunkTo(CABOT),[45.0,-58.5],[43.0,-62.0],[40.8,-69.5]],
+  MARIT :[...trunkTo(CABOT),[45.2,-59.5]],
+  GULF  :[...trunkTo(7)],
+  NFLD  :[...trunkTo(RACE),[47.3,-52.5]]
+};
+
+function laneOf(p){
+  const {lat,lon,reg}=p;
+  if(reg==="WI"){
+    if(lat>=30)  return "BERM";                   // Bermuda, mid-ocean
+    if(lon<=-70) return "WI_W";                   // Jamaica, Cuba, the Bahamas
+    return "WI_E";                                // Lesser Antilles, Trinidad, Demerara
+  }
+  if(reg==="US")  return "USE";
+  if(reg==="BNA"){
+    if(lat>=50&&lon<=-55)   return "NFLD";        // Labrador coast
+    if(lon>=-57.5&&lat>=46) return "NFLD";        // Avalon, St John's
+    if(lat>=46.5&&lon<=-60&&lon>=-68) return "GULF";  // Miramichi, Gaspé, Magdalens
+    return "MARIT";                               // Halifax, Cape Breton, Fundy
+  }
+  if(reg==="IE"){
+    if(lat>=54.7&&lon<=-6.3) return "NCH";        // Londonderry, the north coast
+    if(lat>=53.6&&lon<=-8.3) return "IE_NW";      // Sligo, Westport, Ballina
+    if(lat<=52.2&&lon<=-7.0) return "IE_S";       // Cork, Youghal, Baltimore
+    if(lon<=-7.5)            return "IE_W";       // Limerick, Tralee, Galway
+    return "IRISH";                               // Dublin, Waterford, Newry, Belfast
+  }
+  if(reg==="SC") return (lon>=-3.5||lat>=57.0)?"ABDN":"NCH";
+  if(reg==="EW"){
+    if(lat>=53.0&&lon>=-2.2) return "NSEA";       // Hull up to Berwick
+    if(lat>=51.0&&lat<52.6&&lon>=-1.2) return "THAMES";
+    if(lon<=-2.3&&lat>=52.8) return "IRISH";      // Liverpool, Cumbria, north Wales
+    if(lat>=51.0&&lon<=-2.3&&lon>=-5.6) return "BRIS";
+    return "CHAN";
+  }
+  if(reg==="EU"){
+    if(lat<45) return "IBER";
+    if(lat>=52&&lon>=0) return "NSEA";
+    return "CHAN";
+  }
+  return "IE_W";
+}
+
+/* Catmull-Rom through the waypoints, sampled evenly, kept in (lon, mercatorY)
+   space so it survives resize and zoom: screen = lon*SC+OX, OY-my*SC. */
+const SAMPLES=26;
+function smooth(pts){
+  const P0=[pts[0],...pts,pts[pts.length-1]], out=[];
+  for(let i=1;i<P0.length-2;i++){
+    const a=P0[i-1],b=P0[i],c=P0[i+1],d=P0[i+2];
+    for(let s=0;s<SAMPLES;s++){
+      const t=s/SAMPLES,t2=t*t,t3=t2*t;
+      out.push([
+        .5*((2*b[0])+(-a[0]+c[0])*t+(2*a[0]-5*b[0]+4*c[0]-d[0])*t2+(-a[0]+3*b[0]-3*c[0]+d[0])*t3),
+        .5*((2*b[1])+(-a[1]+c[1])*t+(2*a[1]-5*b[1]+4*c[1]-d[1])*t2+(-a[1]+3*b[1]-3*c[1]+d[1])*t3)
+      ]);
+    }
+  }
+  out.push(pts[pts.length-1]);
+  return out;
+}
+
+const routeCache=new Map();
+function route(pi){                       /* {pt:[[lon,my],...], cum:[0..1]} */
+  let r=routeCache.get(pi);
+  if(r) return r;
+  const p=P[pi];
+  const lane=LANES[laneOf(p)];
+  /* port -> lane head -> ... -> Quebec */
+  const way=[[p.lat,p.lon],...lane.slice().reverse()];
+  /* drop a head that sits almost on top of the port (short coastal hops) */
+  if(way.length>2){
+    const d=Math.hypot(way[0][0]-way[1][0],way[0][1]-way[1][1]);
+    if(d<0.6) way.splice(1,1);
+  }
+  const sm=smooth(way.map(([la,lo])=>[lo,myOf(la)]));
+  const cum=[0];
+  for(let i=1;i<sm.length;i++)
+    cum.push(cum[i-1]+Math.hypot(sm[i][0]-sm[i-1][0],sm[i][1]-sm[i-1][1]));
+  const tot=cum[cum.length-1]||1;
+  for(let i=0;i<cum.length;i++) cum[i]/=tot;
+  r={pt:sm,cum};routeCache.set(pi,r);return r;
+}
+/* position along a route at t in 0..1, in screen pixels */
+function routePos(r,t){
+  const c=r.cum;
+  let lo=0,hi=c.length-1;
+  if(t<=0) return [r.pt[0][0]*SC+OX,OY-r.pt[0][1]*SC];
+  if(t>=1){const q=r.pt[hi];return [q[0]*SC+OX,OY-q[1]*SC];}
+  while(lo<hi){const m=(lo+hi+1)>>1; if(c[m]<=t) lo=m; else hi=m-1;}
+  const j=Math.min(lo+1,r.pt.length-1);
+  const span=(c[j]-c[lo])||1,f=(t-c[lo])/span;
+  const a=r.pt[lo],b=r.pt[j];
+  return [(a[0]+(b[0]-a[0])*f)*SC+OX, OY-(a[1]+(b[1]-a[1])*f)*SC];
+}
+function tracePath(g,r){
+  g.beginPath();
+  for(let i=0;i<r.pt.length;i++){
+    const x=r.pt[i][0]*SC+OX,y=OY-r.pt[i][1]*SC;
+    i?g.lineTo(x,y):g.moveTo(x,y);
+  }
+}
 
 /* sqrt scaling: a dot's AREA is proportional to the settlers aboard.
    Scaled gently with the map so the marks keep their weight on any viewport. */
@@ -490,16 +618,15 @@ function renderTrade(){
 
   /* routes first, so the ports sit on top of them */
   gTrail.globalCompositeOperation="lighter";
+  gTrail.lineCap="round";gTrail.lineJoin="round";
   const drawn=[];
   for(let pi=0;pi<P.length;pi++){
     const p=P[pi],n=portCount(p,f);
     if(!n||!inWin(p.lat,p.lon)) continue;
-    const b=bezier(pi);
     gTrail.strokeStyle=f<0?portCargoCol(p):CARGO_COL[f];
-    gTrail.globalAlpha=.06+.30*Math.sqrt(n/maxN);
+    gTrail.globalAlpha=.05+.26*Math.sqrt(n/maxN);
     gTrail.lineWidth=.35+2.6*Math.sqrt(n/maxN);
-    gTrail.beginPath();gTrail.moveTo(b.x0,b.y0);
-    gTrail.quadraticCurveTo(b.cx,b.cy,b.x1,b.y1);gTrail.stroke();
+    tracePath(gTrail,route(pi));gTrail.stroke();
     drawn.push({pi,n,p});
   }
   gTrail.globalAlpha=1;gTrail.globalCompositeOperation="source-over";
@@ -546,45 +673,24 @@ function renderTrade(){
 
 function rebuild(target){
   arcs.length=0;spawnPtr=0;arrPtr=0;
-  cumVoy=0;cumSet=0;cumCargo.fill(0);cumReg={};portAcc.fill(0);portMax=1;tickLog.length=0;
+  cumVoy=0;cumSet=0;cumCargo.fill(0);cumReg={};portAcc.fill(0);portMax=1;
   gTrail.clearRect(0,0,W,H);gTrail.globalCompositeOperation="lighter";
-  while(arrPtr<list.length&&VVT[list[arrPtr]]<=target){land(list[arrPtr],false);arrPtr++;}
+  while(arrPtr<list.length&&VVT[list[arrPtr]]<=target){land(list[arrPtr]);arrPtr++;}
   while(spawnPtr<list.length&&VVT[list[spawnPtr]]-PASSAGE<=target){
     const i=list[spawnPtr];
     if(VVT[i]+FADE>target) arcs.push({i,t0:VVT[i]-PASSAGE});
     spawnPtr++;
   }
-  /* backfill the ticker so a scrub never leaves it blank */
-  for(let k=arrPtr-1;k>=0&&tickLog.length<6;k--){
-    const i=list[k];
-    tickLog.push({name:DATA.vnames[i],rig:DATA.vrigs[i],port:P[V[i][1]].name,s:V[i][2]});
-  }
-  tickDirty=true;
   curYear=dayDate(vtToDay(target)).getUTCFullYear();
   recomputeSeason(target);paintUI(target);
 }
 
-function land(i,live){
+function land(i){
   const v=V[i],pi=v[1],s=v[2],p=P[pi];
   cumVoy++;cumSet+=s;cumCargo[v[3]]++;
   cumReg[p.reg]=(cumReg[p.reg]||0)+s;
   portAcc[pi]+=(act===2?s:1);
   if(portAcc[pi]>portMax) portMax=portAcc[pi];
-  if(inWin(p.lat,p.lon)) drawTrail(i);
-  if(live){
-    tickLog.unshift({name:DATA.vnames[i],rig:DATA.vrigs[i],port:p.name,s});
-    if(tickLog.length>6) tickLog.length=6;
-    tickDirty=true;
-  }
-}
-function drawTrail(i){
-  const b=bezier(V[i][1]);
-  gTrail.strokeStyle=colorOf(i);
-  gTrail.globalAlpha=act===2?Math.min(.05+V[i][2]/2600,.3):.028;
-  gTrail.lineWidth=act===2?Math.min(.4+V[i][2]/420,2.1):.5;
-  gTrail.beginPath();gTrail.moveTo(b.x0,b.y0);
-  gTrail.quadraticCurveTo(b.cx,b.cy,b.x1,b.y1);gTrail.stroke();
-  gTrail.globalAlpha=1;
 }
 function recomputeSeason(target){
   const yr=dayDate(vtToDay(target)).getUTCFullYear();
@@ -625,7 +731,7 @@ function advance(nv){
   while(spawnPtr<list.length&&VVT[list[spawnPtr]]-PASSAGE<=nv){
     arcs.push({i:list[spawnPtr],t0:VVT[list[spawnPtr]]-PASSAGE});spawnPtr++;
   }
-  while(arrPtr<list.length&&VVT[list[arrPtr]]<=nv){land(list[arrPtr],true);arrPtr++;}
+  while(arrPtr<list.length&&VVT[list[arrPtr]]<=nv){land(list[arrPtr]);arrPtr++;}
   const y=dayDate(vtToDay(nv)).getUTCFullYear();
   if(y!==curYear){curYear=y;seasonVoy=0;seasonSet=0;}
   vt=nv;checkNote(nv);
@@ -656,13 +762,13 @@ function render(){
     if(age>PASSAGE+FADE){arcs.splice(k,1);continue;}
     const i=a.i,p=P[V[i][1]];
     if(!inWin(p.lat,p.lon)){if(age>PASSAGE) arcs.splice(k,1);continue;}
-    const b=bezier(V[i][1]),t=Math.min(age/PASSAGE,1),s=V[i][2];
+    const rt=route(V[i][1]),t=Math.min(age/PASSAGE,1),s=V[i][2];
     const col=colorOf(i);
-    /* each vessel is a dot in passage; in Act II its radius is the number of
-       people aboard (sqrt-scaled, so area reads as the count) */
+    /* each vessel is a dot following its sea lane; in Act II the radius is the
+       number of people aboard (sqrt-scaled, so area reads as the count) */
     const r=act===2?dotR(s):1.7*dotScale();
     if(t<1){
-      const hd=bezAt(b,t);
+      const hd=routePos(rt,t);
       gFx.globalAlpha=1;gFx.fillStyle=col;
       gFx.beginPath();gFx.arc(hd[0],hd[1],r,0,7);gFx.fill();
       if(r>2.6){            /* surface ring keeps overlapping dots separable */
@@ -670,9 +776,9 @@ function render(){
       }
     }else{
       /* landfall: an expanding ring, so simultaneous arrivals stay countable */
-      const f=1-(age-PASSAGE)/FADE;
+      const f=1-(age-PASSAGE)/FADE,q=routePos(rt,1);
       gFx.strokeStyle=col;gFx.globalAlpha=.6*f;gFx.lineWidth=1.4;
-      gFx.beginPath();gFx.arc(b.x1,b.y1,r*(1+2.2*(1-f)),0,7);gFx.stroke();
+      gFx.beginPath();gFx.arc(q[0],q[1],r*(1+2.2*(1-f)),0,7);gFx.stroke();
       if(f>.72) flash=Math.max(flash,(f-.72)/.28);
     }
   }
@@ -794,7 +900,7 @@ function render3(){
 /* ============================ UI ============================ */
 const $=id=>document.getElementById(id);
 const elClock=$("clock"),elHero=$("hero"),elHeroLab=$("heroLab"),elSeason=$("season"),
-      elRows=$("rows"),elPanelT=$("panelTitle"),elTicker=$("ticker"),elIce=$("ice"),
+      elRows=$("rows"),elPanelT=$("panelTitle"),elIce=$("ice"),
       elFill=$("fill"),elHead=$("head2"),elTrack=$("track");
 
 function paintUI(v){
@@ -835,7 +941,6 @@ function paintUI(v){
   elFill.style.width=pct+"%";elHead.style.left=pct+"%";
   elTrack.setAttribute("aria-valuenow",Math.round(pct));
   if(act!==3) paintRows();
-  if(tickDirty){paintTicker();tickDirty=false;}
 }
 
 function paintRows(){
@@ -865,13 +970,6 @@ function paintRows(){
     const bi=k.children[2].firstElementChild;
     bi.style.width=(r.pct*100).toFixed(1)+"%";bi.style.background=r.col;
   });
-}
-function paintTicker(){
-  elTicker.innerHTML=tickLog.map(t=>{
-    const rig=t.rig?t.rig.charAt(0).toUpperCase()+t.rig.slice(1)+" ":"";
-    const who=act===2&&t.s?' <span class="n">'+fmt(t.s)+' settlers</span>':"";
-    return '<div class="tk">'+rig+'<b>'+t.name+'</b> from '+t.port+who+'</div>';
-  }).join("");
 }
 function paintLegend(){
   let items;
@@ -1027,11 +1125,11 @@ function setAct(a,at){
   $("bAct2").classList.toggle("on",a===2);
   $("bAct3").classList.toggle("on",a===3);
   $("panel").style.opacity=a===3?0:1;
-  $("ticker").style.opacity=(a===1||a===3)?0:1;
   /* Act I is a static map: no clock, no transport */
   $("bar").classList.toggle("static",a===1);
   $("cargoBar").style.display=a===1?"flex":"none";
   $("note").classList.toggle("east",a===1);
+  $("panel").classList.toggle("hi",a===1);
   noteIx=-1;hideNote();
   paintLegend();paintTicks();paintMarkers();
   if(a===1){ playing=false;setPlayBtn();paintTrade(); }
@@ -1159,9 +1257,13 @@ function buildTable(){
    '<li><strong>Act I</strong> plots every arrival. <strong>Act II</strong> replays the same seasons '+
      'showing only vessels recorded as carrying settlers. <strong>Act III</strong> leaves the '+
      'spreadsheet behind (see below).</li>'+
-   '<li>Each arc leaves its port of origin '+PASSAGE+' days before the vessel’s recorded arrival &mdash; '+
+   '<li>Each dot leaves its port of origin '+PASSAGE+' days before the vessel’s recorded arrival &mdash; '+
      'the median passage here ('+fmt(M.passage.n)+' voyages state a duration; the middle 80% ran '+
-     M.passage.p10+'–'+M.passage.p90+' days). Arcs are schematic, not actual tracks.</li>'+
+     M.passage.p10+'–'+M.passage.p90+' days).</li>'+
+   '<li>Routes follow hand-drawn <strong>sea lanes</strong> rather than straight lines, so vessels stay '+
+     'on water and converge the way they actually did &mdash; round Newfoundland, through the Cabot '+
+     'Strait, up the Gulf and the river. The lanes are plausible, not surveyed: no track survives for '+
+     'individual voyages in this record, and the final hop from a lane to the quayside is drawn straight.</li>'+
    '<li>Winter is compressed 8:1 on the timeline. Almost nothing arrives between December and March, '+
      'because the St Lawrence is frozen.</li>'+
    '<li>Of '+fmt(ballastVoy)+' vessels declaring no cargo (“in ballast”), those same ships landed '+

@@ -13,7 +13,7 @@ network access at runtime.
 | | | |
 |---|---|---|
 | **I · The Port** | *Static.* All 17,062 mapped arrivals at once — the geography of the port's trade, each origin sized by voyages and coloured by the trade it mostly served. Filter to one cargo to isolate that run | from the database |
-| **II · The Crossing** | *Animated.* The same seasons, showing only ships carrying settlers. Each dot is one vessel in passage, its area proportional to the people aboard | from the database |
+| **II · The Crossing** | *Animated.* The same seasons, showing only ships carrying settlers. Each dot is one vessel in passage along its sea lane, its area proportional to the people aboard | from the database |
 | **III · Beyond the Rapids** | *Animated.* Where the crossing led — and it did not lead to one place | from Clifford & Huckerby (2025) |
 
 Act I is deliberately not a ship-by-ship animation. Its subject is structure, not
@@ -89,11 +89,23 @@ of the Solway so the Cumbrian ports stay English. Both tests are in
 December and March because the St Lawrence is frozen, and at true scale the
 animation would spend a third of its length on an empty river.
 
-**Arcs are schematic.** In Act II each dot leaves its origin 40 days before the
-recorded arrival — the median passage in this database — and follows a drawn
-curve, not a track. No route data survives at this granularity. The inland
-corridors in Act III are schematic in the same way, and carry no counts: the
-database records nothing past the quay.
+**Routes follow sea lanes, and they are plausible rather than surveyed.** Ships
+did not fly over Ireland, so routes are not straight lines or arcs. Every voyage
+in this record converges on the same funnel — round Newfoundland, through the
+Cabot Strait, up the Gulf and the river — so the map is built from one shared
+trunk plus about fifteen approach lanes (Irish Sea, North Channel, Channel,
+Bristol Channel, Thames, North Sea, Iberia, two Caribbean branches either side
+of the Antilles, and so on), with each port assigned to a lane geographically.
+Waypoints were placed by hand in open water and checked by point-in-polygon
+against the coastline: **land crossings fall from 100% of voyages on straight
+lines to 8.6%**, and what remains is almost entirely the final hop to ports that
+genuinely sit inland — Gloucester up the Severn, Bordeaux up the Gironde,
+Newcastle up the Tyne. No track survives for individual voyages, so these are a
+reasonable reconstruction of where ships went, not evidence of it.
+
+In Act II each dot leaves its origin 40 days before the recorded arrival — the
+median passage in this database. The inland corridors in Act III are schematic in
+the same way and carry no counts: the database records nothing past the quay.
 
 **817 rows are not mapped** because they lack a usable date or origin
 coordinate, so totals here run slightly below the full spreadsheet (the article
