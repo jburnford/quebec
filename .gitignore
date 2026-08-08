@@ -1,0 +1,11 @@
+# Natural Earth downloads, re-fetchable with build/basemap.py
+build/_ne_cache/
+
+# editor / OS noise
+.DS_Store
+Thumbs.db
+*.tmp
+~$*
+
+# local preview config
+.claude/

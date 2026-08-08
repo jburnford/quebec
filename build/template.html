@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A Cheap Bridge — The Port of Quebec, 1817–1839</title>
+<style>
+:root{
+  --ocean:#0d1a24; --ocean-2:#091219; --land:#18262f; --coast:#2d4356;
+  --ink:#ffffff; --ink-2:#c3c2b7; --ink-3:#898781;
+  --rule:rgba(255,255,255,0.10); --panel:rgba(9,18,25,0.86);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+  --s5:#d55181; --s6:#008300; --s7:#9085e9; --other:#8b8f96;
+  --quebec:#ffe0ad;
+  --font:system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--ocean-2);color:var(--ink);font-family:var(--font);
+  overflow:hidden;-webkit-font-smoothing:antialiased}
+#stage{position:fixed;inset:0}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#cMap{z-index:1} #cTrail{z-index:2} #cFx{z-index:3}
+.ui{position:absolute;z-index:5}
+
+#head{top:0;left:0;padding:22px 26px;max-width:min(46ch,52vw);pointer-events:none}
+#kicker{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px}
+#actTitle{font-size:clamp(21px,2.5vw,32px);font-weight:650;line-height:1.12;margin:0 0 8px}
+#actSub{font-size:13.5px;line-height:1.55;color:var(--ink-2);margin:0;max-width:44ch}
+
+#read{top:0;right:0;padding:22px 26px;text-align:right;pointer-events:none}
+#clock{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+#hero{font-size:clamp(34px,4.6vw,58px);font-weight:680;line-height:1;margin:6px 0 2px;font-variant-numeric:tabular-nums}
+#heroLab{font-size:12.5px;color:var(--ink-2)}
+#season{font-size:12.5px;color:var(--ink-3);margin-top:10px;font-variant-numeric:tabular-nums}
+#ice{margin-top:8px;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:#7fb2d9;opacity:0;transition:opacity .5s}
+#ice.on{opacity:1}
+
+#panel{right:26px;top:min(38vh,300px);width:236px;pointer-events:none;transition:opacity .4s}
+.pTitle{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px;text-align:right}
+.row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:baseline;margin-bottom:3px}
+.rowName{font-size:12.5px;color:var(--ink-2);text-align:right;order:1}
+.rowVal{font-size:12.5px;color:var(--ink);font-variant-numeric:tabular-nums;order:2;min-width:62px;text-align:right}
+.bar{grid-column:1/-1;height:5px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden;order:3;margin-bottom:7px}
+.barIn{height:100%;border-radius:3px;width:0;transition:width .25s linear}
+
+#ticker{left:26px;bottom:172px;width:290px;pointer-events:none;transition:opacity .4s}
+.tk{font-size:12.5px;line-height:1.45;color:var(--ink-2);margin-bottom:5px;opacity:0;transform:translateY(4px);
+    animation:tkin .45s ease forwards}
+.tk b{color:var(--ink);font-weight:600}
+.tk .n{color:var(--ink-3);font-variant-numeric:tabular-nums}
+@keyframes tkin{to{opacity:1;transform:none}}
+
+#note{left:26px;top:min(34vh,270px);max-width:352px;pointer-events:none;opacity:0;transition:opacity .55s}
+#note.on{opacity:1}
+/* In Act I the whole western Atlantic carries traffic — the Caribbean routes run
+   up the left side — so the caption moves to the eastern side, which is empty. */
+#note.east{left:auto;right:26px;top:min(58vh,500px);max-width:330px}
+/* the note sits over the busiest part of the map, so it carries its own surface */
+#note{background:rgba(9,18,25,.80);backdrop-filter:blur(10px);
+  border:1px solid var(--rule);border-left:2px solid var(--s4);
+  border-radius:10px;padding:13px 16px 14px}
+#noteYear{font-size:12px;letter-spacing:.14em;color:var(--s4);margin-bottom:7px;font-weight:600}
+#noteBody{font-size:13.5px;line-height:1.62;color:var(--ink-2)}
+#noteBody strong{color:var(--ink);font-weight:600}
+#noteBody em.q{color:var(--ink);font-style:italic}
+.ctx{display:block;margin-top:8px;font-size:11.5px;color:var(--ink-3);font-style:italic}
+
+#legend{display:flex;gap:12px 18px;flex-wrap:wrap;align-items:center;margin-bottom:11px;pointer-events:none}
+.lg{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink-2)}
+.sw{width:11px;height:11px;border-radius:3px;flex:none;box-shadow:0 0 0 2px var(--ocean-2)}
+
+#bar{left:0;right:0;bottom:0;padding:14px 26px 18px;pointer-events:auto;
+  background:linear-gradient(to top,rgba(9,18,25,.92) 55%,rgba(9,18,25,0))}
+/* Act I has no clock, so the timeline and its transport step aside */
+#bar.static #track,#bar.static #bSpeed,#bar.static #bPlay,#bar.static #bReplay{display:none}
+#cargoBar{display:none;gap:7px;flex-wrap:wrap;margin-bottom:11px;align-items:center}
+#cargoBar .cf{font-size:12px;padding:5px 11px}
+#cargoBar .cf .dot{width:9px;height:9px;border-radius:50%;display:inline-block;
+  margin-right:6px;vertical-align:-1px}
+#cargoBar .lbl{font-size:11px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink-3);margin-right:4px}
+#track{position:relative;height:34px;cursor:pointer}
+#axis{position:absolute;left:0;right:0;top:19px;height:2px;background:rgba(255,255,255,.13);border-radius:2px}
+#fill{position:absolute;left:0;top:19px;height:2px;background:var(--ink);border-radius:2px;width:0}
+#head2{position:absolute;top:15px;width:2px;height:10px;background:var(--ink);border-radius:2px;transform:translateX(-1px)}
+.tick{position:absolute;top:25px;font-size:10px;color:var(--ink-3);transform:translateX(-50%);font-variant-numeric:tabular-nums}
+.tickL{position:absolute;top:16px;width:1px;height:8px;background:rgba(255,255,255,.16)}
+.mk{position:absolute;top:14px;width:9px;height:9px;margin-left:-4.5px;border-radius:50%;
+    background:var(--ocean-2);border:2px solid var(--s4);cursor:pointer;pointer-events:auto}
+.mk:hover{background:var(--s4)}
+#ctrls{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+button{font-family:var(--font);font-size:12.5px;color:var(--ink-2);background:rgba(255,255,255,.06);
+  border:1px solid var(--rule);border-radius:7px;padding:7px 12px;cursor:pointer}
+button:hover{background:rgba(255,255,255,.12);color:var(--ink)}
+button.on{background:var(--ink);color:#0b1219;border-color:var(--ink);font-weight:600}
+button:focus-visible{outline:2px solid var(--s1);outline-offset:2px}
+.sp{flex:1}
+.hint{font-size:11.5px;color:var(--ink-3)}
+
+#tip{position:absolute;z-index:9;pointer-events:none;background:var(--panel);border:1px solid var(--rule);
+  border-radius:9px;padding:9px 12px;font-size:12.5px;line-height:1.5;opacity:0;transition:opacity .12s;
+  backdrop-filter:blur(9px);max-width:230px}
+#tip b{display:block;color:var(--ink);font-weight:620;margin-bottom:3px}
+#tip span{color:var(--ink-2);font-variant-numeric:tabular-nums}
+
+.veil{position:fixed;inset:0;z-index:20;background:rgba(6,12,17,.94);backdrop-filter:blur(5px);
+  display:flex;align-items:center;justify-content:center;padding:34px;opacity:0;visibility:hidden;
+  transition:opacity .6s,visibility .6s}
+.veil.on{opacity:1;visibility:visible}
+.card{max-width:660px;text-align:center}
+.card h2{font-size:clamp(22px,3.1vw,38px);font-weight:660;line-height:1.18;margin:0 0 18px}
+.card p{font-size:15px;line-height:1.7;color:var(--ink-2);margin:0 auto 14px;max-width:57ch}
+.card .big{font-size:clamp(42px,6.6vw,80px);font-weight:700;line-height:1;color:var(--s1);
+  margin:20px 0 6px;font-variant-numeric:tabular-nums}
+.card .cap{font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:24px}
+blockquote{margin:22px auto;max-width:56ch;padding-left:18px;border-left:2px solid var(--s4);
+  text-align:left;font-size:15px;line-height:1.72;color:var(--ink)}
+blockquote cite{display:block;margin-top:10px;font-size:12.5px;color:var(--ink-3);font-style:normal}
+#tableVeil{overflow:auto;align-items:flex-start}
+#tableWrap{max-width:920px;width:100%;margin:auto;padding:14px 0 60px}
+#tableWrap h2{font-size:20px;margin:0 0 6px}
+#tableWrap p{font-size:13px;color:var(--ink-2);line-height:1.6;margin:0 0 18px;max-width:72ch}
+table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{padding:7px 11px;text-align:right;border-bottom:1px solid var(--rule)}
+th:first-child,td:first-child{text-align:left}
+thead th{color:var(--ink-3);font-weight:600;font-size:11px;letter-spacing:.09em;text-transform:uppercase;
+  position:sticky;top:0;background:#080f15}
+tfoot td{font-weight:650;border-top:2px solid var(--rule);border-bottom:none;color:var(--ink)}
+td{color:var(--ink-2)} td:first-child{color:var(--ink)}
+.close{position:fixed;top:18px;right:22px;z-index:22}
+#notes{margin-top:34px;font-size:12.5px;color:var(--ink-3);line-height:1.72;max-width:76ch}
+#notes h3{font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-2);margin:26px 0 9px}
+#notes li{margin-bottom:7px} #notes a{color:var(--s1)}
+
+@media (max-width:1100px){
+  #panel,#ticker{display:none}
+  #head{max-width:min(64vw,42ch);padding:16px}
+  #read{padding:16px}
+  #note{max-width:min(72vw,330px)}
+  #bar{padding:12px 16px 14px}
+  #legend{gap:9px 14px}
+  .hint{display:none}
+}
+@media (max-width:760px){
+  #note,#note.east{max-width:none;left:16px;right:16px;position:absolute;
+        top:min(30vh,210px);bottom:auto}
+  #actTitle{font-size:20px} #actSub{font-size:12.5px}
+  #legend{font-size:11px}
+  button{padding:6px 10px;font-size:12px}
+}
+@media (prefers-reduced-motion:reduce){ .tk{animation:none;opacity:1;transform:none} }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <canvas id="cMap"></canvas>
+  <canvas id="cTrail"></canvas>
+  <canvas id="cFx"></canvas>
+
+  <header class="ui" id="head">
+    <div id="kicker">A Cheap Bridge &middot; The Port of Quebec, 1817&ndash;1839</div>
+    <h1 id="actTitle">An Atlantic Port</h1>
+    <p id="actSub">Every vessel recorded arriving at Quebec, in the order it came.</p>
+  </header>
+
+  <div class="ui" id="read">
+    <div id="clock">10 May 1817</div>
+    <div id="hero">0</div>
+    <div id="heroLab">vessels arrived</div>
+    <div id="season">&nbsp;</div>
+    <div id="ice">The river is closed by ice</div>
+  </div>
+
+  <div class="ui" id="panel">
+    <div class="pTitle" id="panelTitle">Cargo declared</div>
+    <div id="rows"></div>
+  </div>
+
+  <div class="ui" id="note"><div id="noteYear"></div><div id="noteBody"></div></div>
+  <div class="ui" id="ticker"></div>
+
+  <div class="ui" id="bar">
+    <div id="legend"></div>
+    <div id="cargoBar"></div>
+    <div id="track" role="slider" tabindex="0" aria-label="Timeline"
+         aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="1817">
+      <div id="axis"></div><div id="fill"></div><div id="head2"></div>
+    </div>
+    <div id="ctrls">
+      <button id="bPlay">Pause</button>
+      <button id="bAct1">I &middot; The Port</button>
+      <button id="bAct2">II &middot; The Crossing</button>
+      <button id="bAct3">III &middot; Beyond the Rapids</button>
+      <button id="bSpeed">1&times;</button>
+      <button id="bReplay">Replay</button>
+      <button id="bNext">Continue &rarr;</button>
+      <div class="sp"></div>
+      <span class="hint" id="hint">Drag the timeline &middot; hover a port for detail</span>
+      <button id="bTable">Data &amp; notes</button>
+    </div>
+  </div>
+
+  <div id="tip"></div>
+</div>
+
+<div class="veil" id="interVeil"><div class="card">
+  <h2>Half the fleet arrives empty.</h2>
+  <p>Most vessels in this record declare no cargo at all. They come <em>in ballast</em> &mdash; weighted
+     with sand and stone &mdash; and they come for timber. Preferential duties have made the St&nbsp;Lawrence
+     Britain&rsquo;s timber yard, and a ship that sails east loaded with squared pine has nothing to
+     carry on the way west.</p>
+  <p>Nothing, that is, except people.</p>
+  <blockquote>&ldquo;Above all, it is by means of the lumber vessels going out in ballast, that a
+     &lsquo;CHEAP BRIDGE&rsquo; is made for the passage of Emigrants.&rdquo;
+     <cite>Nathaniel Gould, London timber importer, 1833</cite></blockquote>
+  <div class="big" id="interBig">0</div>
+  <div class="cap">settlers carried in those empty holds</div>
+  <button id="bGo2" style="margin-top:12px">Continue to Act II &rarr;</button>
+</div></div>
+
+<div class="veil" id="inter2Veil"><div class="card">
+  <h2>The record ends at the quay.</h2>
+  <p>The newspapers logged each vessel as it reached Quebec, and then stopped. But almost nobody
+     stayed at the waterfront. They went up the St&nbsp;Lawrence to Montreal, and many carried on up a
+     second river &mdash; the Kichi&nbsp;Zībī, the Ottawa &mdash; following the timber
+     roads inland.</p>
+  <p>That country was not empty, and it had not been surrendered.</p>
+  <button id="bGo3" style="margin-top:12px">Continue to Act III &rarr;</button>
+</div></div>
+
+<div class="veil" id="tableVeil">
+  <button class="close" id="bCloseTable">Close</button>
+  <div id="tableWrap">
+    <h2>Arrivals at Quebec by season</h2>
+    <p id="tableIntro"></p>
+    <table>
+      <thead><tr>
+        <th>Season</th><th>Vessels</th><th>Ships with settlers</th><th>Settlers</th>
+        <th>Ireland</th><th>Scotland</th><th>England &amp; Wales</th><th>Elsewhere</th>
+      </tr></thead>
+      <tbody id="tbody"></tbody><tfoot id="tfoot"></tfoot>
+    </table>
+    <div id="notes"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const DATA   = /*__DATA__*/;
+const COAST  = /*__COAST__*/;
+const INLAND = /*__INLAND__*/;
+
+/* ============================ constants ============================ */
+const M=DATA.meta, V=DATA.voyages, P=DATA.ports, VT=DATA.vt, VTMAX=M.vtmax;
+const QLAT=M.quebec[0], QLON=M.quebec[1];
+const PASSAGE=40, FADE=22, VT_PER_SEC=40;
+const SPEEDS=[1,2,4,0.5];
+const A3MAX=100;                                  /* Act III runs on its own 0-100 clock */
+
+const REG={
+  IE :{name:"Ireland",            col:"#3987e5"},
+  SC :{name:"Scotland",           col:"#d95926"},
+  EW :{name:"England & Wales",    col:"#199e70"},
+  BNA:{name:"British N. America", col:"#8b8f96"},
+  WI :{name:"West Indies",        col:"#8b8f96"},
+  US :{name:"United States",      col:"#8b8f96"},
+  EU :{name:"Continental Europe", col:"#8b8f96"},
+  FAR:{name:"Beyond the Atlantic",col:"#8b8f96"},
+  XX :{name:"Not identified",     col:"#8b8f96"}
+};
+const CARGO_COL=["#3987e5","#d95926","#199e70","#c98500","#d55181","#008300","#9085e9"];
+const CARGO_LAB=M.cargo_labels, MAIN_REG=["IE","SC","EW"];
+const D0=new Date(M.d0+"T00:00:00Z");
+const MONTHS=["January","February","March","April","May","June","July","August",
+              "September","October","November","December"];
+const fmt=n=>n.toLocaleString("en-GB");
+/* labels arrive as plain text; escape wherever they are injected as markup */
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const dayDate=d=>new Date(D0.getTime()+d*86400000);
+
+const VVT=new Float64Array(V.length);
+for(let i=0;i<V.length;i++) VVT[i]=VT[V[i][0]];
+const LIST1=V.map((_,i)=>i), LIST2=LIST1.filter(i=>V[i][2]>0);
+
+/* ============================ views ============================ */
+/* view aspect ratios are matched to a typical landscape window so the fitted
+   map fills the frame instead of letterboxing */
+const V_ATLANTIC={lon0:-86,lon1:29,lat0:8,lat1:60};
+const V_GULF    ={lon0:-78,lon1:-58,lat0:43,lat1:52};
+const V_CORRIDOR={lon0:-78.4,lon1:-69.6,lat0:44.2,lat1:48.2};
+/* wide enough to hold Upper Canada, the Eastern Townships and the border */
+const V_DEST    ={lon0:-83,lon1:-69,lat0:41.5,lat1:47.5};
+const V_VALLEY  ={lon0:-78.4,lon1:-73.6,lat0:44.9,lat1:46.7};
+/* deepest zoom still holds the whole run of river from the Chaudière to
+   Allumette Island — any tighter and the frame is empty land */
+const V_WEST    ={lon0:-77.8,lon1:-75.4,lat0:45.3,lat1:46.25};
+
+/* ============================ Act III script ============================ */
+/* Act I and II are drawn from the arrivals spreadsheet. Act III is not: the
+   record stops at Quebec, so everything below is sourced to Clifford &
+   Huckerby (2025) and is labelled as such in the notes. */
+const ROUTE=[[46.81,-71.21],[46.55,-71.95],[46.34,-72.54],[46.05,-73.12],[45.75,-73.45],
+             [45.50,-73.57],[45.42,-73.90],[45.52,-74.32],[45.55,-74.72],[45.50,-75.20],
+             [45.42,-75.71],[45.44,-75.95],[45.47,-76.24],[45.60,-76.55],[45.72,-76.75],
+             [45.82,-76.90],[45.86,-77.04]];
+const PLACES=[
+  {n:"Quebec",              lat:46.814,lon:-71.208,at:0},
+  {n:"Trois-Rivières", lat:46.343,lon:-72.543,at:8},
+  {n:"Montreal",            lat:45.502,lon:-73.567,at:16},
+  {n:"Chaudière Falls",lat:45.418,lon:-75.715,at:46},
+  {n:"Lac des Chats",       lat:45.475,lon:-76.240,at:62},
+  {n:"Rocher Fendu Rapids", lat:45.723,lon:-76.750,at:72},
+  {n:"Westmeath",           lat:45.817,lon:-76.900,at:84},
+  {n:"Allumette Island",    lat:45.860,lon:-77.040,at:88}
+];
+
+/* Quebec was a landing place, not a destination. The database records none of
+   what follows, so these corridors are schematic: they show that the Ottawa
+   Valley was one destination among several, not the destination. */
+const DESTS=[
+  {n:"Upper Canada",      lab:[43.55,-79.6],
+   pts:[[45.50,-73.57],[45.20,-74.60],[44.23,-76.48],[43.95,-77.80],[43.65,-79.38],[43.26,-79.87]]},
+  {n:"Eastern Townships", lab:[45.28,-71.55],
+   pts:[[45.50,-73.57],[45.35,-72.70],[45.40,-71.89]]},
+  {n:"United States",     lab:[42.55,-73.60],
+   pts:[[45.50,-73.57],[45.05,-73.35],[44.50,-73.35],[43.30,-73.60],[42.65,-73.76]]}
+];
+const BEATS=[
+ {at:0, view:V_GULF, y:"1817–1839",
+  body:"Every arc in the last two acts ended here. <strong>"+"{SET}"+" settlers</strong> came ashore at Quebec in twenty-three seasons &mdash; and then walked out of the record."},
+ {at:12, view:V_CORRIDOR, y:"Up the St Lawrence",
+  body:"They moved inland by river. Montreal first &mdash; and from Montreal, in every direction."},
+ {at:24, view:V_DEST, y:"Quebec was not a destination",
+  body:"The great majority pushed on into <strong>Upper Canada</strong>, filling the townships of what is now southern Ontario. Others took up land in the <strong>Eastern Townships</strong> of Lower Canada. Many thousands never stayed in British North America at all, crossing on into the <strong>United States</strong>.",
+  ctx:"Upper Canada counted 150,066 people in 1824 and 487,053 by 1842. This act follows only one of these routes."},
+ {at:36, view:V_VALLEY, y:"One valley of many",
+  body:"We take the <strong>Ottawa Valley</strong> &mdash; the Kichi Zībī &mdash; because it is where the timber trade and settlement are most tightly bound together. It is a case study, not the whole story.",
+  ctx:"This is the territory of the Algonquin nation. Under the Royal Proclamation of 1763 the Crown was required to negotiate for Indigenous land before settlement. Here it never did, and the territory is unceded to this day."},
+ {at:46, view:V_VALLEY, y:"1800 · 1806",
+  body:"Philemon Wright settles at the <strong>Chaudière Falls</strong>. Six years later he grasps that the valley&rsquo;s old-growth pine can be squared and floated to the British market.",
+  ctx:"The timber trade that filled those westbound holds began here."},
+ {at:56, view:V_VALLEY, y:"The feedback loop",
+  body:"Loggers push upriver for better pine. Farmers follow the timber roads, because the camps pay high prices for <strong>oats and hay</strong>. The camps in turn offer winter wages and a market.",
+  ctx:"Each made the other possible: cheap passage out, work and a market on arrival."},
+ {at:66, view:V_VALLEY, y:"Early 1820s",
+  body:"Settlement reaches the <strong>Lac des Chats</strong>, then stalls at the Rocher Fendu Rapids &mdash; a long, broken stretch of white water at Grand Calumet Island."},
+ {at:76, view:V_WEST, y:"1830s",
+  body:"Settlers push <strong>beyond the rapids</strong> into Westmeath Township and the Allumette Island region. Surveys begin in 1832; Crown land sales from 1833."},
+ {at:86, view:V_WEST, y:"Westmeath, 1842–52",
+  body:"By 1842: <strong>628 settlers</strong>, 1,684 acres under cultivation. By 1852: <strong>1,146 residents</strong>, 154 farms, 4,598 acres cleared for European crops &mdash; and nearly every lot in the township owned.",
+  ctx:"It was ordinary work — cutting timber, raising a barn, keeping a road — that turned unceded territory into private property."},
+ {at:93, view:V_VALLEY, y:"The valley by 1852",
+  body:"<strong>85,578</strong> settlers on the Upper Canada side of the valley and <strong>22,903</strong> on the Lower Canada side. A quarter of them were born in Ireland.",
+  ctx:"Settler colonialism requires settlers. The timber ships delivered them."}
+];
+
+/* ============================ projection ============================ */
+let VIEW={...V_ATLANTIC};
+/* Mercator y. x stays in degrees of longitude, so y is converted to the same
+   degree-equivalent units (×180/π) — otherwise one axis is scaled 57× off and
+   the map comes out squashed north-to-south. */
+const RAD2DEG=180/Math.PI;
+const myOf=lat=>RAD2DEG*Math.log(Math.tan(Math.PI/4+lat*Math.PI/360));
+let W=0,H=0,DPR=1,SC=1,OX=0,OY=0,MY0=0,MY1=0;
+function layout(){
+  MY0=myOf(VIEW.lat0); MY1=myOf(VIEW.lat1);
+  const pad=window.innerWidth<900?8:20;
+  SC=Math.min((W-pad*2)/(VIEW.lon1-VIEW.lon0),(H-pad*2)/(MY1-MY0));
+  OX=(W-(VIEW.lon1-VIEW.lon0)*SC)/2-VIEW.lon0*SC;
+  OY=(H-(MY1-MY0)*SC)/2+MY1*SC;
+}
+const px=lon=>lon*SC+OX, py=lat=>OY-myOf(lat)*SC;
+const inWin=(lat,lon)=>lat>VIEW.lat0&&lat<VIEW.lat1&&lon>VIEW.lon0&&lon<VIEW.lon1;
+const lerp=(a,b,t)=>a+(b-a)*t;
+const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+function lerpView(a,b,t){
+  const e=ease(Math.max(0,Math.min(1,t)));
+  return {lon0:lerp(a.lon0,b.lon0,e),lon1:lerp(a.lon1,b.lon1,e),
+          lat0:lerp(a.lat0,b.lat0,e),lat1:lerp(a.lat1,b.lat1,e)};
+}
+
+/* ============================ canvases ============================ */
+const cMap=document.getElementById("cMap"),cTrail=document.getElementById("cTrail"),cFx=document.getElementById("cFx");
+const gMap=cMap.getContext("2d"),gTrail=cTrail.getContext("2d"),gFx=cFx.getContext("2d");
+
+function resize(){
+  DPR=Math.min(window.devicePixelRatio||1,2);
+  W=window.innerWidth;H=window.innerHeight;
+  for(const c of [cMap,cTrail,cFx]){c.width=W*DPR;c.height=H*DPR;}
+  for(const g of [gMap,gTrail,gFx]) g.setTransform(DPR,0,0,DPR,0,0);
+  layout(); drawBase();
+  if(act===1) renderTrade();
+  else if(act===2) rebuild(vt);
+}
+
+function poly(g,ring,close){
+  g.beginPath();
+  for(let i=0;i<ring.length;i++){
+    const x=px(ring[i][0]),y=py(ring[i][1]);
+    i?g.lineTo(x,y):g.moveTo(x,y);
+  }
+  if(close) g.closePath();
+}
+
+function drawBase(){
+  gMap.clearRect(0,0,W,H);
+  const grd=gMap.createLinearGradient(0,0,0,H);
+  grd.addColorStop(0,"#0a151d");grd.addColorStop(.55,"#0d1a24");grd.addColorStop(1,"#091219");
+  gMap.fillStyle=grd;gMap.fillRect(0,0,W,H);
+  gMap.lineJoin="round";gMap.lineCap="round";
+
+  /* coarse Atlantic coastline fades out as the camera moves inland */
+  const span=VIEW.lon1-VIEW.lon0;
+  const aCoast=Math.max(0,Math.min(1,(span-12)/14));
+  const aInland=1-aCoast;
+
+  if(aCoast>0.01){
+    gMap.globalAlpha=aCoast;
+    gMap.fillStyle="#18262f";gMap.strokeStyle="#2d4356";gMap.lineWidth=1;
+    for(const ring of COAST){ poly(gMap,ring,true); gMap.fill(); gMap.stroke(); }
+  }
+  if(aInland>0.01){
+    gMap.globalAlpha=aInland;
+    gMap.fillStyle="#18262f";gMap.strokeStyle="#2d4356";gMap.lineWidth=1;
+    for(const ring of INLAND.land){ poly(gMap,ring,true); gMap.fill(); gMap.stroke(); }
+    gMap.fillStyle="#0a141c";gMap.strokeStyle="#2b4157";
+    for(const ring of INLAND.lakes){ poly(gMap,ring,true); gMap.fill(); gMap.stroke(); }
+    gMap.strokeStyle="#3d6b8c";gMap.lineWidth=Math.max(1.2,Math.min(4,SC/28));
+    for(const ring of INLAND.rivers){ poly(gMap,ring,false); gMap.stroke(); }
+  }
+  gMap.globalAlpha=1;
+
+  if(act!==3){
+    const qx=px(QLON),qy=py(QLAT);
+    gMap.strokeStyle="rgba(255,224,173,.34)";gMap.lineWidth=1;
+    gMap.beginPath();gMap.arc(qx,qy,13,0,7);gMap.stroke();
+    gMap.fillStyle="#ffe0ad";
+    gMap.font="600 12px "+getComputedStyle(document.body).fontFamily;
+    gMap.textAlign="left";gMap.fillText("QUEBEC",qx+18,qy+4);
+  }
+}
+
+/* ============================ state ============================ */
+let act=1,vt=0,playing=true,speedIx=0,raf=0,last=0,dragging=false;
+let list=LIST1,spawnPtr=0,arrPtr=0,arcs=[];
+let cumVoy=0,cumSet=0,cumCargo=new Array(7).fill(0),cumReg={},seasonVoy=0,seasonSet=0,curYear=0;
+const portAcc=new Float64Array(P.length); let portMax=1;
+let noteIx=-1,noteUntil=-1,tickLog=[],tickDirty=false,uiAcc=0;
+let flow=[];
+
+const bezier=(()=>{ const cache=new Map();
+  return pi=>{
+    let c=cache.get(pi);
+    if(c&&c.sc===SC&&c.ox===OX&&c.oy===OY) return c;
+    const p=P[pi],x0=px(p.lon),y0=py(p.lat),x1=px(QLON),y1=py(QLAT);
+    const dx=x1-x0,dy=y1-y0,len=Math.hypot(dx,dy)||1,bulge=Math.min(len*.19,130);
+    c={x0,y0,x1,y1,cx:(x0+x1)/2+(dy/len)*bulge,cy:(y0+y1)/2-(dx/len)*bulge,sc:SC,ox:OX,oy:OY};
+    cache.set(pi,c);return c;
+  };})();
+const bezAt=(b,t)=>{const u=1-t;
+  return [u*u*b.x0+2*u*t*b.cx+t*t*b.x1,u*u*b.y0+2*u*t*b.cy+t*t*b.y1];};
+
+/* sqrt scaling: a dot's AREA is proportional to the settlers aboard.
+   Scaled gently with the map so the marks keep their weight on any viewport. */
+const DOT_K=0.34;
+const dotScale=()=>Math.max(.55,Math.min(1.25,SC/12));
+const dotR=s=>(1.1+DOT_K*Math.sqrt(s))*dotScale();
+
+function colorOf(i){
+  if(act===2){const r=P[V[i][1]].reg;return MAIN_REG.includes(r)?REG[r].col:REG.BNA.col;}
+  return V[i][3]===0?"#3987e5":"#d95926";
+}
+
+/* ---------------- Act I: the geography of trade (static) ---------------- */
+let tradeFilter=-1;                       /* -1 = every cargo */
+const portCount=(p,f)=>f<0?p.voyages:p.cc[f];
+/* a port's colour is the trade it mostly served */
+function portCargoCol(p){
+  let bi=0,bv=-1;
+  for(let k=0;k<7;k++) if(p.cc[k]>bv){bv=p.cc[k];bi=k;}
+  return CARGO_COL[bi];
+}
+function renderTrade(){
+  gFx.clearRect(0,0,W,H);gTrail.clearRect(0,0,W,H);
+  const f=tradeFilter;
+  let maxN=1;
+  for(const p of P){const n=portCount(p,f); if(n>maxN&&inWin(p.lat,p.lon)) maxN=n;}
+
+  /* routes first, so the ports sit on top of them */
+  gTrail.globalCompositeOperation="lighter";
+  const drawn=[];
+  for(let pi=0;pi<P.length;pi++){
+    const p=P[pi],n=portCount(p,f);
+    if(!n||!inWin(p.lat,p.lon)) continue;
+    const b=bezier(pi);
+    gTrail.strokeStyle=f<0?portCargoCol(p):CARGO_COL[f];
+    gTrail.globalAlpha=.06+.30*Math.sqrt(n/maxN);
+    gTrail.lineWidth=.35+2.6*Math.sqrt(n/maxN);
+    gTrail.beginPath();gTrail.moveTo(b.x0,b.y0);
+    gTrail.quadraticCurveTo(b.cx,b.cy,b.x1,b.y1);gTrail.stroke();
+    drawn.push({pi,n,p});
+  }
+  gTrail.globalAlpha=1;gTrail.globalCompositeOperation="source-over";
+
+  /* ports */
+  drawn.sort((a,b)=>a.n-b.n);
+  for(const d of drawn){
+    const r=1.6+9.5*Math.sqrt(d.n/maxN);
+    const col=f<0?portCargoCol(d.p):CARGO_COL[f];
+    const x=px(d.p.lon),y=py(d.p.lat);
+    gFx.fillStyle=col;gFx.globalAlpha=.34;
+    gFx.beginPath();gFx.arc(x,y,r,0,7);gFx.fill();
+    gFx.globalAlpha=1;
+    gFx.beginPath();gFx.arc(x,y,Math.max(r*.42,1.1),0,7);gFx.fill();
+    gFx.strokeStyle="rgba(9,18,25,.7)";gFx.lineWidth=1.2;gFx.stroke();
+  }
+
+  /* label the largest, biggest first, skipping anything that would collide */
+  const fam=getComputedStyle(document.body).fontFamily;
+  gFx.font="600 12px "+fam;
+  const boxes=[];
+  const top=drawn.slice().sort((a,b)=>b.n-a.n).slice(0,22);
+  for(const d of top){
+    const x=px(d.p.lon),y=py(d.p.lat);
+    const r=1.6+9.5*Math.sqrt(d.n/maxN);
+    const txt=d.p.name, wpx=gFx.measureText(txt).width;
+    const bx=x+r+6, by=y-7, bw=wpx+2, bh=14;
+    if(bx+bw>W-10||bx<10||by<10||by+bh>H-140) continue;
+    if(boxes.some(o=>bx<o[2]&&bx+bw>o[0]&&by<o[3]&&by+bh>o[1])) continue;
+    boxes.push([bx,by,bx+bw,by+bh]);
+    gFx.fillStyle="rgba(9,18,25,.62)";
+    gFx.fillRect(bx-3,by,bw+6,bh);
+    gFx.fillStyle="rgba(255,255,255,.93)";
+    gFx.fillText(txt,bx,by+11);
+  }
+
+  /* Quebec marker on top */
+  const qx=px(QLON),qy=py(QLAT);
+  gFx.strokeStyle="rgba(255,224,173,.45)";gFx.lineWidth=1.2;
+  gFx.beginPath();gFx.arc(qx,qy,13,0,7);gFx.stroke();
+  gFx.fillStyle="#ffe0ad";gFx.font="600 12px "+fam;
+  gFx.fillText("QUEBEC",qx+18,qy+4);
+}
+
+function rebuild(target){
+  arcs.length=0;spawnPtr=0;arrPtr=0;
+  cumVoy=0;cumSet=0;cumCargo.fill(0);cumReg={};portAcc.fill(0);portMax=1;tickLog.length=0;
+  gTrail.clearRect(0,0,W,H);gTrail.globalCompositeOperation="lighter";
+  while(arrPtr<list.length&&VVT[list[arrPtr]]<=target){land(list[arrPtr],false);arrPtr++;}
+  while(spawnPtr<list.length&&VVT[list[spawnPtr]]-PASSAGE<=target){
+    const i=list[spawnPtr];
+    if(VVT[i]+FADE>target) arcs.push({i,t0:VVT[i]-PASSAGE});
+    spawnPtr++;
+  }
+  /* backfill the ticker so a scrub never leaves it blank */
+  for(let k=arrPtr-1;k>=0&&tickLog.length<6;k--){
+    const i=list[k];
+    tickLog.push({name:DATA.vnames[i],rig:DATA.vrigs[i],port:P[V[i][1]].name,s:V[i][2]});
+  }
+  tickDirty=true;
+  curYear=dayDate(vtToDay(target)).getUTCFullYear();
+  recomputeSeason(target);paintUI(target);
+}
+
+function land(i,live){
+  const v=V[i],pi=v[1],s=v[2],p=P[pi];
+  cumVoy++;cumSet+=s;cumCargo[v[3]]++;
+  cumReg[p.reg]=(cumReg[p.reg]||0)+s;
+  portAcc[pi]+=(act===2?s:1);
+  if(portAcc[pi]>portMax) portMax=portAcc[pi];
+  if(inWin(p.lat,p.lon)) drawTrail(i);
+  if(live){
+    tickLog.unshift({name:DATA.vnames[i],rig:DATA.vrigs[i],port:p.name,s});
+    if(tickLog.length>6) tickLog.length=6;
+    tickDirty=true;
+  }
+}
+function drawTrail(i){
+  const b=bezier(V[i][1]);
+  gTrail.strokeStyle=colorOf(i);
+  gTrail.globalAlpha=act===2?Math.min(.05+V[i][2]/2600,.3):.028;
+  gTrail.lineWidth=act===2?Math.min(.4+V[i][2]/420,2.1):.5;
+  gTrail.beginPath();gTrail.moveTo(b.x0,b.y0);
+  gTrail.quadraticCurveTo(b.cx,b.cy,b.x1,b.y1);gTrail.stroke();
+  gTrail.globalAlpha=1;
+}
+function recomputeSeason(target){
+  const yr=dayDate(vtToDay(target)).getUTCFullYear();
+  seasonVoy=0;seasonSet=0;
+  for(let k=0;k<arrPtr;k++){
+    const i=list[k];
+    if(dayDate(V[i][0]).getUTCFullYear()===yr){seasonVoy++;seasonSet+=V[i][2];}
+  }
+}
+function vtToDay(v){
+  let lo=0,hi=VT.length-1;
+  if(v<=0) return 0;
+  if(v>=VT[hi]) return hi;
+  while(lo<hi){const mid=(lo+hi+1)>>1; if(VT[mid]<=v) lo=mid; else hi=mid-1;}
+  return lo;
+}
+
+/* ============================ frame ============================ */
+function frame(ts){
+  raf=requestAnimationFrame(frame);
+  const dt=Math.min((ts-last)/1000,.1);last=ts;
+  if(act===1){ uiAcc+=dt; return; }               /* static: drawn once on entry */
+  const maxT=act===3?A3MAX:VTMAX;
+  if(playing&&!dragging){
+    const rate=act===3?(A3MAX/95):VT_PER_SEC;      /* Act III ~95s at 1x */
+    advance(vt+dt*rate*SPEEDS[speedIx]);
+    if(vt>=maxT){playing=false;setPlayBtn();onActEnd();}
+  }
+  act===3?render3():render();
+  uiAcc+=dt;
+  if(uiAcc>0.1){paintUI(vt);uiAcc=0;}
+}
+
+function advance(nv){
+  const maxT=act===3?A3MAX:VTMAX;
+  nv=Math.min(nv,maxT);
+  if(act===3){vt=nv;step3(nv);return;}
+  while(spawnPtr<list.length&&VVT[list[spawnPtr]]-PASSAGE<=nv){
+    arcs.push({i:list[spawnPtr],t0:VVT[list[spawnPtr]]-PASSAGE});spawnPtr++;
+  }
+  while(arrPtr<list.length&&VVT[list[arrPtr]]<=nv){land(list[arrPtr],true);arrPtr++;}
+  const y=dayDate(vtToDay(nv)).getUTCFullYear();
+  if(y!==curYear){curYear=y;seasonVoy=0;seasonSet=0;}
+  vt=nv;checkNote(nv);
+}
+
+function render(){
+  gFx.clearRect(0,0,W,H);
+  gFx.globalCompositeOperation="lighter";
+  for(let pi=0;pi<P.length;pi++){
+    const a=portAcc[pi];if(!a) continue;
+    const p=P[pi];if(!inWin(p.lat,p.lon)) continue;
+    const r=1.4+6.4*Math.sqrt(a/portMax);
+    const col=act===2?(MAIN_REG.includes(p.reg)?REG[p.reg].col:REG.BNA.col):"#7fb2d9";
+    gFx.fillStyle=col;gFx.globalAlpha=.30;
+    gFx.beginPath();gFx.arc(px(p.lon),py(p.lat),r,0,7);gFx.fill();
+    gFx.globalAlpha=.70;
+    gFx.beginPath();gFx.arc(px(p.lon),py(p.lat),Math.max(r*.34,.9),0,7);gFx.fill();
+  }
+  gFx.globalAlpha=1;
+  /* voyage dots draw normally, not additively: dozens overlap at the landfall
+     and `lighter` blows them out to a white blob */
+  gFx.globalCompositeOperation="source-over";
+
+  let flash=0;
+  for(let k=arcs.length-1;k>=0;k--){
+    const a=arcs[k],age=vt-a.t0;
+    if(age<0) continue;
+    if(age>PASSAGE+FADE){arcs.splice(k,1);continue;}
+    const i=a.i,p=P[V[i][1]];
+    if(!inWin(p.lat,p.lon)){if(age>PASSAGE) arcs.splice(k,1);continue;}
+    const b=bezier(V[i][1]),t=Math.min(age/PASSAGE,1),s=V[i][2];
+    const col=colorOf(i);
+    /* each vessel is a dot in passage; in Act II its radius is the number of
+       people aboard (sqrt-scaled, so area reads as the count) */
+    const r=act===2?dotR(s):1.7*dotScale();
+    if(t<1){
+      const hd=bezAt(b,t);
+      gFx.globalAlpha=1;gFx.fillStyle=col;
+      gFx.beginPath();gFx.arc(hd[0],hd[1],r,0,7);gFx.fill();
+      if(r>2.6){            /* surface ring keeps overlapping dots separable */
+        gFx.strokeStyle="rgba(9,18,25,.75)";gFx.lineWidth=1.5;gFx.stroke();
+      }
+    }else{
+      /* landfall: an expanding ring, so simultaneous arrivals stay countable */
+      const f=1-(age-PASSAGE)/FADE;
+      gFx.strokeStyle=col;gFx.globalAlpha=.6*f;gFx.lineWidth=1.4;
+      gFx.beginPath();gFx.arc(b.x1,b.y1,r*(1+2.2*(1-f)),0,7);gFx.stroke();
+      if(f>.72) flash=Math.max(flash,(f-.72)/.28);
+    }
+  }
+  gFx.globalAlpha=1;
+  if(flash>0){
+    const qx=px(QLON),qy=py(QLAT);
+    gFx.strokeStyle="rgba(255,224,173,"+(.5*flash).toFixed(3)+")";
+    gFx.lineWidth=1.6;gFx.beginPath();gFx.arc(qx,qy,13+16*(1-flash),0,7);gFx.stroke();
+  }
+  gFx.globalCompositeOperation="source-over";
+  for(let pi=0;pi<P.length;pi++){
+    if(!portAcc[pi]) continue;
+    const p=P[pi];if(inWin(p.lat,p.lon)) continue;
+    gFx.fillStyle="rgba(139,143,150,.75)";
+    gFx.beginPath();
+    gFx.arc(Math.max(6,Math.min(W-6,px(p.lon))),Math.max(6,Math.min(H-6,py(p.lat))),2.6,0,7);
+    gFx.fill();
+  }
+}
+
+/* ---------------- Act III ---------------- */
+function routeAt(u){                       /* u in 0..1 along the polyline */
+  const n=ROUTE.length-1,f=Math.max(0,Math.min(.9999,u))*n,i=Math.floor(f),t=f-i;
+  return [lerp(ROUTE[i][0],ROUTE[i+1][0],t), lerp(ROUTE[i][1],ROUTE[i+1][1],t)];
+}
+function step3(v){
+  /* camera: ease between the views of the surrounding beats */
+  let a=BEATS[0],b=BEATS[0];
+  for(let k=0;k<BEATS.length;k++){ if(v>=BEATS[k].at){a=BEATS[k];b=BEATS[Math.min(k+1,BEATS.length-1)];} }
+  const span=Math.max(1,b.at-a.at);
+  VIEW=lerpView(a.view,b.view,(v-a.at)/span);
+  layout();drawBase();
+  checkNote3(v);
+  const front=Math.max(0,Math.min(1,(v-6)/86));
+  if(flow.length<90&&Math.random()<.55) flow.push({u:Math.random()*.04,sp:.0016+Math.random()*.0026});
+  for(let k=flow.length-1;k>=0;k--){
+    flow[k].u+=flow[k].sp;
+    if(flow[k].u>front+.02) flow.splice(k,1);
+  }
+}
+function render3(){
+  gFx.clearRect(0,0,W,H);gTrail.clearRect(0,0,W,H);
+  const front=Math.max(0,Math.min(1,(vt-6)/86));
+
+  /* the other destinations, once the story admits them. Kept visible but
+     recessive afterwards, so the valley never reads as the only outcome. */
+  if(vt>=22){
+    const t=Math.min(1,(vt-22)/5), late=vt>40?.55:1;
+    const fam=getComputedStyle(document.body).fontFamily;
+    gFx.lineCap="round";
+    for(const d of DESTS){
+      gFx.strokeStyle="rgba(139,143,150,"+(.55*t*late).toFixed(2)+")";
+      gFx.lineWidth=2;gFx.setLineDash([5,5]);
+      gFx.beginPath();
+      d.pts.forEach((p,i)=>{const x=px(p[1]),y=py(p[0]);i?gFx.lineTo(x,y):gFx.moveTo(x,y);});
+      gFx.stroke();gFx.setLineDash([]);
+      const lx=px(d.lab[1]),ly=py(d.lab[0]);
+      if(lx>-60&&lx<W+60&&ly>-30&&ly<H+30){
+        gFx.font="600 12px "+fam;gFx.textAlign="center";
+        gFx.fillStyle="rgba(195,194,183,"+(.9*t*late).toFixed(2)+")";
+        gFx.fillText(d.n,lx,ly);
+      }
+    }
+    gFx.textAlign="left";
+  }
+
+  /* the route travelled so far */
+  gFx.strokeStyle="rgba(255,224,173,.5)";gFx.lineWidth=2;gFx.lineCap="round";
+  gFx.beginPath();
+  const steps=160;
+  for(let q=0;q<=steps;q++){
+    const u=front*q/steps,pt=routeAt(u),x=px(pt[1]),y=py(pt[0]);
+    q?gFx.lineTo(x,y):gFx.moveTo(x,y);
+  }
+  gFx.stroke();
+
+  /* people moving up it */
+  gFx.globalCompositeOperation="lighter";
+  for(const f of flow){
+    const pt=routeAt(f.u);
+    gFx.fillStyle="rgba(255,224,173,.85)";
+    gFx.beginPath();gFx.arc(px(pt[1]),py(pt[0]),1.9,0,7);gFx.fill();
+  }
+  gFx.globalCompositeOperation="source-over";
+
+  /* the river's Algonquin name, once the story names it. Placed as a label on
+     the valley — this is not a territorial boundary, which the sources here
+     do not provide. */
+  if(vt>=30){
+    const t=Math.min(1,(vt-30)/5);
+    const fam=getComputedStyle(document.body).fontFamily;
+    gFx.textAlign="center";
+    gFx.font="600 15px "+fam;
+    gFx.fillStyle="rgba(217,89,38,"+(.92*t).toFixed(2)+")";
+    const lx=px(-76.6),ly=py(46.32);
+    gFx.fillText("KICHI ZĪBĪ",lx,ly);
+    gFx.font="12px "+fam;
+    gFx.fillStyle="rgba(195,194,183,"+(.8*t).toFixed(2)+")";
+    gFx.fillText("unceded Algonquin territory",lx,ly+18);
+  }
+
+  /* places, revealed as the story reaches them */
+  gFx.font="600 12px "+getComputedStyle(document.body).fontFamily;
+  gFx.textAlign="left";
+  for(const pl of PLACES){
+    if(vt<pl.at) continue;
+    const t=Math.min(1,(vt-pl.at)/4);
+    const x=px(pl.lon),y=py(pl.lat);
+    if(x<-40||x>W+40||y<-40||y>H+40) continue;
+    gFx.fillStyle="rgba(255,224,173,"+(.95*t).toFixed(2)+")";
+    gFx.beginPath();gFx.arc(x,y,3.4,0,7);gFx.fill();
+    gFx.strokeStyle="rgba(255,224,173,"+(.34*t).toFixed(2)+")";gFx.lineWidth=1;
+    gFx.beginPath();gFx.arc(x,y,8,0,7);gFx.stroke();
+    gFx.fillStyle="rgba(255,255,255,"+(.9*t).toFixed(2)+")";
+    gFx.fillText(pl.n,x+12,y+4);
+  }
+}
+
+/* ============================ UI ============================ */
+const $=id=>document.getElementById(id);
+const elClock=$("clock"),elHero=$("hero"),elHeroLab=$("heroLab"),elSeason=$("season"),
+      elRows=$("rows"),elPanelT=$("panelTitle"),elTicker=$("ticker"),elIce=$("ice"),
+      elFill=$("fill"),elHead=$("head2"),elTrack=$("track");
+
+function paintUI(v){
+  if(act===1){
+    const f=tradeFilter;
+    elClock.textContent="Twenty-three seasons";
+    elHero.textContent=fmt(cumVoy);
+    elHeroLab.textContent=f<0?"vessels arrived":"vessels · "+CARGO_LAB[f];
+    elSeason.textContent=f<0
+      ? fmt(M.settlers_total)+" settlers among them"
+      : Math.round(cumVoy/M.rows_used*100)+"% of all arrivals";
+    elIce.classList.remove("on");
+    const pct=0;elFill.style.width=pct+"%";elHead.style.left=pct+"%";
+    paintRows();
+    return;
+  }
+  if(act===3){
+    elClock.textContent="Beyond the rapids";
+    elHero.textContent=fmt(M.settlers_total);
+    elHeroLab.textContent="settlers landed at Quebec";
+    elSeason.textContent="1817–1839";
+    elIce.classList.remove("on");
+  }else{
+    const dt=dayDate(vtToDay(v)),mo=dt.getUTCMonth();
+    elClock.textContent=dt.getUTCDate()+" "+MONTHS[mo]+" "+dt.getUTCFullYear();
+    elIce.classList.toggle("on",mo<3||mo>10);
+    if(act===1){
+      elHero.textContent=fmt(cumVoy);elHeroLab.textContent="vessels arrived";
+      elSeason.textContent=seasonVoy+" this season";
+    }else{
+      elHero.textContent=fmt(cumSet);elHeroLab.textContent="settlers landed";
+      elSeason.textContent=fmt(seasonSet)+" this season";
+    }
+    elTrack.setAttribute("aria-valuetext",dt.getUTCFullYear());
+  }
+  const maxT=act===3?A3MAX:VTMAX;
+  const pct=Math.max(0,Math.min(1,v/maxT))*100;
+  elFill.style.width=pct+"%";elHead.style.left=pct+"%";
+  elTrack.setAttribute("aria-valuenow",Math.round(pct));
+  if(act!==3) paintRows();
+  if(tickDirty){paintTicker();tickDirty=false;}
+}
+
+function paintRows(){
+  let rows;
+  if(act===1){
+    elPanelT.textContent="Cargo declared";
+    const tot=Math.max(cumVoy,1);
+    rows=CARGO_LAB.map((lab,ix)=>({lab,val:cumCargo[ix],col:CARGO_COL[ix],pct:cumCargo[ix]/tot}))
+                  .sort((a,b)=>b.val-a.val);
+  }else{
+    elPanelT.textContent="Where they sailed from";
+    const other=Object.keys(cumReg).filter(k=>!MAIN_REG.includes(k)).reduce((s,k)=>s+cumReg[k],0);
+    const tot=Math.max(cumSet,1);
+    rows=MAIN_REG.map(r=>({lab:REG[r].name,val:cumReg[r]||0,col:REG[r].col,pct:(cumReg[r]||0)/tot}))
+      .concat([{lab:"Elsewhere",val:other,col:REG.BNA.col,pct:other/tot}])
+      .sort((a,b)=>b.val-a.val);
+  }
+  if(elRows.childElementCount!==rows.length){
+    elRows.innerHTML=rows.map(()=>'<div class="row"><div class="rowName"></div>'+
+      '<div class="rowVal"></div><div class="bar"><div class="barIn"></div></div></div>').join("");
+  }
+  const kids=elRows.children;
+  rows.forEach((r,ix)=>{
+    const k=kids[ix];
+    k.children[0].textContent=r.lab;
+    k.children[1].textContent=fmt(r.val);
+    const bi=k.children[2].firstElementChild;
+    bi.style.width=(r.pct*100).toFixed(1)+"%";bi.style.background=r.col;
+  });
+}
+function paintTicker(){
+  elTicker.innerHTML=tickLog.map(t=>{
+    const rig=t.rig?t.rig.charAt(0).toUpperCase()+t.rig.slice(1)+" ":"";
+    const who=act===2&&t.s?' <span class="n">'+fmt(t.s)+' settlers</span>':"";
+    return '<div class="tk">'+rig+'<b>'+t.name+'</b> from '+t.port+who+'</div>';
+  }).join("");
+}
+function paintLegend(){
+  let items;
+  if(act===1) items=[{c:"#8b8f96",l:tradeFilter<0
+                        ? "Each port coloured by the trade it mostly served"
+                        : "Ports sending "+esc(CARGO_LAB[tradeFilter].toLowerCase())},
+                     {c:"#8b8f96",l:"Circle and route width show number of voyages"}];
+  else if(act===2) items=MAIN_REG.map(r=>({c:REG[r].col,l:REG[r].name}))
+                    .concat([{c:REG.BNA.col,l:"Elsewhere"}]);
+  else items=[{c:"#ffe0ad",l:"Route inland from Quebec"},
+              {c:"#33566f",l:"Rivers — the St Lawrence and the Kichi Zībī"},
+              {c:"#8b8f96",l:"Act III is drawn from Clifford &amp; Huckerby (2025), not the arrivals data"}];
+  let html=items.map(i=>
+    '<div class="lg"><span class="sw" style="background:'+i.c+'"></span>'+i.l+'</div>').join("");
+  if(act===2){
+    /* size key: each dot is one ship in passage, drawn at the real scale */
+    html+='<div class="lg" style="gap:11px">'+[25,150,500].map(n=>{
+        const d=Math.round(dotR(n)*2);
+        return '<span style="display:inline-flex;align-items:center;gap:5px">'+
+          '<span style="width:'+d+'px;height:'+d+'px;border-radius:50%;background:#c3c2b7;'+
+          'display:inline-block;flex:none"></span>'+n+'</span>';
+      }).join("")+'<span style="color:var(--ink-3)">settlers aboard</span></div>';
+  }
+  $("legend").innerHTML=html;
+}
+
+/* Act I: one note per trade, so the filter explains itself */
+const TRADE_NOTES={
+"-1":{y:"The shape of the trade",
+ body:"Twenty-three seasons of arrivals, drawn all at once. Three systems overlap here: a <strong>North Atlantic run</strong> to Britain and Ireland, a <strong>Caribbean run</strong> carrying produce north, and a <strong>coastal run</strong> from the Gulf and the Maritimes.",
+ ctx:"Each port is coloured by the trade it mostly served. Choose one below to isolate it."},
+"0":{y:"In ballast",
+ body:"The largest fleet of all arrives carrying <strong>nothing</strong> &mdash; sand and stone for weight. These are timber ships, and they crossed the ocean empty because there was no westbound cargo worth the freight.",
+ ctx:"Their empty holds are the subject of Act II."},
+"1":{y:"Rum &amp; sugar",
+ body:"The Caribbean run: <strong>Jamaica, Grenada, Trinidad, Demerara</strong> and the Leeward Islands, sending rum, sugar and molasses up to the St Lawrence.",
+ ctx:"A trade in the produce of enslaved labour; British slavery was not abolished until 1833–38, within the span of this record."},
+"2":{y:"Coals",
+ body:"Coal comes from the <strong>north-east English ports</strong> &mdash; Newcastle, Sunderland, Shields &mdash; and from the Cumbrian coast. It is heavy, cheap, and useful as ballast that can also be sold."},
+"3":{y:"Salt",
+ body:"Salt from <strong>Liverpool</strong> and the west-coast ports. Like coal it doubles as ballast, and at Quebec it goes straight into the fisheries and the provisions trade."},
+"4":{y:"Fish &amp; oil",
+ body:"The short haul: <strong>Newfoundland, Labrador, the Gaspé, Arichat and the Magdalen Islands</strong>, bringing dried cod, herring and seal oil up the river."},
+"5":{y:"Goods",
+ body:"Dry goods, wine, iron, bricks and general cargo &mdash; the manufactured half of the trade, and overwhelmingly from <strong>London and Liverpool</strong>."},
+"6":{y:"Other &amp; unrecorded",
+ body:"Arrivals whose cargo the newspaper did not classify, or recorded in terms too various to group."}
+};
+
+/* ---------- annotations ---------- */
+const NOTES={1:[
+ {d:"1817-05-13",y:"May 1817",body:"The record opens. The season&rsquo;s first vessels come up the river from <strong>Hull</strong>, <strong>London</strong> and <strong>Cork</strong> &mdash; and one from Jamaica.",
+  ctx:"Quebec&rsquo;s shipping season runs May to November; for the rest of the year the St Lawrence is shut by ice."},
+ {d:"1818-06-20",y:"The ballast fleet",body:"Notice how many arrive declaring <strong>no cargo at all</strong>. They are here for timber, and they crossed the ocean empty to get it."},
+ {d:"1821-08-01",y:"The West Indies run",body:"A second trade threads north from the Caribbean &mdash; <strong>rum, sugar and molasses</strong> from Jamaica, Grenada, Trinidad and Demerara."},
+ {d:"1826-05-20",y:"Coastwise",body:"Not every sail is oceanic. <strong>Halifax</strong>, <strong>Newfoundland</strong>, the Gasp&eacute; and Miramichi send fish, oil and salt up the river all season."},
+ {d:"1831-06-15",y:"1831",body:"The busiest seasons of the whole record begin. The port now handles more than <strong>900 arrivals a year</strong>."},
+ {d:"1837-09-14",y:"14 September 1837",body:"The single heaviest day in the record: <strong>108 vessels</strong> logged as arriving at Quebec."}
+],2:[
+ {d:"1817-06-01",y:"1817",body:"The first full season after the long war. Emigration to British North America is still small.",
+  ctx:"Passenger legislation of 1803 kept fares high; the cheapest lawful berth across the Atlantic was in a returning timber ship."},
+ {d:"1819-07-01",y:"1819",body:"Ireland begins to dominate. <strong>Belfast, Dublin, Cork, Sligo and Londonderry</strong> will together send more people to Quebec than all of England and Wales.",
+  ctx:"Post-war collapse in grain prices and the decline of domestic linen weaving pushed Irish families toward the ports."},
+ {d:"1825-07-01",y:"1825",body:"A summer of organised departures from the south of Ireland.",
+  ctx:"Peter Robinson&rsquo;s government-assisted parties carried some two thousand emigrants from the Cork region to the Upper Canadian backwoods in 1825, after a smaller trial in 1823."},
+ {d:"1831-07-01",y:"1831",body:"The record breaks: more settlers land this season than in any before it, and the arcs thicken right across the North Channel.",
+  ctx:"The Passenger Act of 1828 had loosened the limits on how many people a ship might carry, and fares fell."},
+ {d:"1832-06-08",y:"June 1832",body:"The peak season &mdash; and the worst. <strong>Cholera</strong> comes up the river with the emigrant ships.",
+  ctx:"A quarantine station had opened at Grosse Île, thirty miles below Quebec, that spring. It did not hold; thousands died in Quebec and Montreal that summer."},
+ {d:"1834-07-01",y:"1834",body:"Numbers recover, and cholera returns with them."},
+ {d:"1837-11-01",y:"Winter 1837",body:"Rebellion breaks out in Lower Canada, and then in Upper Canada.",
+  ctx:"Armed risings against the colonial administrations began in November and December 1837 and were renewed through 1838."},
+ {d:"1838-06-01",y:"1838",body:"The crossing all but stops. This is the emptiest season for settlers in the entire record &mdash; a fraction of the year before."},
+ {d:"1839-07-01",y:"1839",body:"A partial return. It will be another decade &mdash; and a famine &mdash; before the traffic reaches 1832&rsquo;s scale again."}
+]};
+const dayOfISO=iso=>Math.round((new Date(iso+"T00:00:00Z")-D0)/86400000);
+const NOTE_VT={1:null,2:null};
+function buildNotes(){
+  for(const a of [1,2])
+    NOTE_VT[a]=NOTES[a].map(n=>({...n,vt:VT[Math.max(0,Math.min(VT.length-1,dayOfISO(n.d)))]}));
+}
+function checkNote(v){
+  const arr=NOTE_VT[act];if(!arr) return;
+  let ix=-1;
+  for(let k=0;k<arr.length;k++) if(v>=arr[k].vt) ix=k;
+  if(ix!==noteIx){
+    noteIx=ix;
+    if(ix>=0){showNote(arr[ix]);noteUntil=v+260;} else hideNote();
+  }
+  if(noteIx>=0&&v>noteUntil) hideNote();
+}
+function checkNote3(v){
+  let ix=-1;
+  for(let k=0;k<BEATS.length;k++) if(v>=BEATS[k].at) ix=k;
+  if(ix!==noteIx){noteIx=ix; if(ix>=0) showNote(BEATS[ix]); else hideNote();}
+}
+function showNote(n){
+  $("noteYear").innerHTML=n.y;
+  $("noteBody").innerHTML=n.body.replace("{SET}",fmt(M.settlers_total))+
+    (n.ctx?'<span class="ctx">'+n.ctx+'</span>':"");
+  $("note").classList.add("on");
+}
+const hideNote=()=>$("note").classList.remove("on");
+
+function paintMarkers(){
+  document.querySelectorAll(".mk").forEach(e=>e.remove());
+  if(act===1) return;                       /* static act has no timeline */
+  const arr=act===3?BEATS:NOTE_VT[act];
+  const maxT=act===3?A3MAX:VTMAX;
+  for(const n of arr){
+    const b=document.createElement("div");
+    b.className="mk";b.style.left=((act===3?n.at:n.vt)/maxT*100)+"%";
+    b.title=n.y;
+    b.onclick=e=>{e.stopPropagation();seek(act===3?n.at:n.vt);};
+    elTrack.appendChild(b);
+  }
+}
+function paintTicks(){
+  document.querySelectorAll(".tick,.tickL").forEach(e=>e.remove());
+  if(act===1) return;
+  if(act===3){
+    for(const pl of PLACES){
+      const l=document.createElement("div");
+      l.className="tickL";l.style.left=(pl.at/A3MAX*100)+"%";elTrack.appendChild(l);
+    }
+  }else{
+    for(let y=1817;y<=1839;y++){
+      const d=Math.round((new Date(y+"-06-01T00:00:00Z")-D0)/86400000);
+      if(d<0||d>=VT.length) continue;
+      const pc=VT[d]/VTMAX*100;
+      if(y%2===1){
+        const t=document.createElement("div");
+        t.className="tick";t.style.left=pc+"%";t.textContent=y;elTrack.appendChild(t);
+      }
+      const l=document.createElement("div");
+      l.className="tickL";l.style.left=pc+"%";elTrack.appendChild(l);
+    }
+  }
+}
+
+/* ============================ acts ============================ */
+const ACTS={
+ 1:{t:"An Atlantic Port",s:"Twenty-three seasons of arrivals at once — the whole geography of the port's trade. Isolate a cargo below to see the run that carried it."},
+ 2:{t:"The Crossing",s:"The same twenty-three seasons again, counting only the ships that carried settlers. Each dot is one vessel in passage, sized by the number of people aboard."},
+ 3:{t:"Beyond the Rapids",s:"Where the cheap bridge led: up the St Lawrence and the Kichi Zībī into unceded Algonquin territory."}
+};
+function setAct(a,at){
+  act=a;
+  if(a!==3){ list=a===1?LIST1:LIST2; VIEW={...V_ATLANTIC}; layout(); drawBase(); }
+  else { flow.length=0; VIEW={...V_GULF}; layout(); drawBase(); }
+  $("actTitle").textContent=ACTS[a].t;$("actSub").textContent=ACTS[a].s;
+  $("bAct1").classList.toggle("on",a===1);
+  $("bAct2").classList.toggle("on",a===2);
+  $("bAct3").classList.toggle("on",a===3);
+  $("panel").style.opacity=a===3?0:1;
+  $("ticker").style.opacity=(a===1||a===3)?0:1;
+  /* Act I is a static map: no clock, no transport */
+  $("bar").classList.toggle("static",a===1);
+  $("cargoBar").style.display=a===1?"flex":"none";
+  $("note").classList.toggle("east",a===1);
+  noteIx=-1;hideNote();
+  paintLegend();paintTicks();paintMarkers();
+  if(a===1){ playing=false;setPlayBtn();paintTrade(); }
+  else seek(at===undefined?0:at);
+}
+
+/* Act I entry point: recompute the static layer and its readouts */
+function paintTrade(){
+  const f=tradeFilter;
+  cumVoy=0;cumSet=0;cumCargo.fill(0);
+  for(const p of P){
+    for(let k=0;k<7;k++){
+      if(f>=0&&k!==f) continue;
+      cumCargo[k]+=p.cc[k];cumVoy+=p.cc[k];
+    }
+    if(f<0) cumSet+=p.settlers;
+  }
+  renderTrade();paintUI(0);paintLegend();
+  showNote(TRADE_NOTES[String(f)]);
+  [...$("cargoBar").children].forEach((b,ix)=>b.classList.toggle("on",ix-2===f));
+}
+function seek(v){
+  const maxT=act===3?A3MAX:VTMAX;
+  vt=Math.max(0,Math.min(maxT,v));
+  if(act===3){ flow.length=0; step3(vt); paintUI(vt); }
+  else { rebuild(vt); checkNote(vt); }
+}
+const setPlayBtn=()=>{$("bPlay").textContent=playing?"Pause":"Play";};
+
+let seen={1:false,2:false};
+function onActEnd(){
+  if(act===2&&!seen[2]){seen[2]=true;$("inter2Veil").classList.add("on");}
+}
+/* Act I is static, so the reveal is reached by the Continue button */
+$("bNext").onclick=()=>{
+  if(act===1){seen[1]=true;$("interBig").textContent=fmt(BALLAST_SETTLERS);
+    $("interVeil").classList.add("on");}
+  else if(act===2){$("inter2Veil").classList.add("on");}
+  else $("bReplay").click();
+};
+
+$("bPlay").onclick=()=>{const maxT=act===3?A3MAX:VTMAX;if(vt>=maxT)seek(0);playing=!playing;setPlayBtn();};
+$("bAct1").onclick=()=>{setAct(1);playing=true;setPlayBtn();};
+$("bAct2").onclick=()=>{setAct(2);playing=true;setPlayBtn();};
+$("bAct3").onclick=()=>{setAct(3);playing=true;setPlayBtn();};
+$("bReplay").onclick=()=>{seek(0);playing=true;setPlayBtn();};
+$("bSpeed").onclick=()=>{speedIx=(speedIx+1)%SPEEDS.length;$("bSpeed").innerHTML=SPEEDS[speedIx]+"&times;";};
+$("bGo2").onclick=()=>{$("interVeil").classList.remove("on");setAct(2);playing=true;setPlayBtn();};
+$("bGo3").onclick=()=>{$("inter2Veil").classList.remove("on");setAct(3);playing=true;setPlayBtn();};
+$("bTable").onclick=()=>$("tableVeil").classList.add("on");
+$("bCloseTable").onclick=()=>$("tableVeil").classList.remove("on");
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape") document.querySelectorAll(".veil").forEach(v=>v.classList.remove("on"));
+  if(e.key===" "){e.preventDefault();$("bPlay").click();}
+  const stepv=act===3?3:120;
+  if(e.key==="ArrowRight") seek(vt+stepv);
+  if(e.key==="ArrowLeft")  seek(vt-stepv);
+});
+
+function trackVt(ev){
+  const r=elTrack.getBoundingClientRect();
+  const x=(ev.touches?ev.touches[0].clientX:ev.clientX)-r.left;
+  return Math.max(0,Math.min(1,x/r.width))*(act===3?A3MAX:VTMAX);
+}
+const startDrag=ev=>{if(ev.target.classList.contains("mk"))return;dragging=true;seek(trackVt(ev));};
+const moveDrag=ev=>{if(dragging){ev.preventDefault();seek(trackVt(ev));}};
+elTrack.addEventListener("mousedown",startDrag);
+elTrack.addEventListener("touchstart",startDrag,{passive:true});
+window.addEventListener("mousemove",moveDrag);
+window.addEventListener("touchmove",moveDrag,{passive:false});
+window.addEventListener("mouseup",()=>dragging=false);
+window.addEventListener("touchend",()=>dragging=false);
+
+const elTip=$("tip");
+cFx.addEventListener("mousemove",e=>{
+  if(act===3){elTip.style.opacity=0;return;}
+  let best=-1,bd=225;
+  for(let pi=0;pi<P.length;pi++){
+    const live=act===1?portCount(P[pi],tradeFilter):portAcc[pi];
+    if(!live) continue;
+    const p=P[pi];if(!inWin(p.lat,p.lon)) continue;
+    const dx=px(p.lon)-e.clientX,dy=py(p.lat)-e.clientY,d=dx*dx+dy*dy;
+    if(d<bd){bd=d;best=pi;}
+  }
+  if(best<0){elTip.style.opacity=0;return;}
+  const p=P[best];
+  let extra="";
+  if(act===1){
+    const top=p.cc.map((n,ix)=>[n,ix]).sort((a,b)=>b[0]-a[0]).filter(x=>x[0]>0).slice(0,3);
+    extra='<br>'+top.map(([n,ix])=>esc(CARGO_LAB[ix])+' '+n).join(' &middot; ');
+  }
+  elTip.innerHTML='<b>'+p.name+'</b><span>'+fmt(p.voyages)+' voyages'+
+    (p.settlers?' &middot; '+fmt(p.settlers)+' settlers':'')+'<br>'+REG[p.reg].name+extra+'</span>';
+  elTip.style.opacity=1;
+  elTip.style.left=Math.min(W-elTip.offsetWidth-8,e.clientX+14)+"px";
+  elTip.style.top=Math.max(8,e.clientY-elTip.offsetHeight-12)+"px";
+});
+cFx.addEventListener("mouseleave",()=>elTip.style.opacity=0);
+
+/* ============================ table & notes ============================ */
+let BALLAST_SETTLERS=0;
+function buildTable(){
+  const Y=DATA.yearly;
+  let tv=0,ts=0,tw=0,tr={IE:0,SC:0,EW:0,O:0};
+  $("tbody").innerHTML=Y.map(r=>{
+    const o=Object.keys(r.reg).filter(k=>!MAIN_REG.includes(k)).reduce((s,k)=>s+r.reg[k],0);
+    tv+=r.voyages;ts+=r.settlers;tw+=r.ships_with_settlers;
+    tr.IE+=r.reg.IE||0;tr.SC+=r.reg.SC||0;tr.EW+=r.reg.EW||0;tr.O+=o;
+    return '<tr><td>'+r.y+'</td><td>'+fmt(r.voyages)+'</td><td>'+fmt(r.ships_with_settlers)+
+      '</td><td>'+fmt(r.settlers)+'</td><td>'+fmt(r.reg.IE||0)+'</td><td>'+fmt(r.reg.SC||0)+
+      '</td><td>'+fmt(r.reg.EW||0)+'</td><td>'+fmt(o)+'</td></tr>';
+  }).join("");
+  $("tfoot").innerHTML='<tr><td>All seasons</td><td>'+fmt(tv)+'</td><td>'+fmt(tw)+'</td><td>'+
+    fmt(ts)+'</td><td>'+fmt(tr.IE)+'</td><td>'+fmt(tr.SC)+'</td><td>'+fmt(tr.EW)+'</td><td>'+fmt(tr.O)+'</td></tr>';
+
+  let ballastVoy=0;
+  for(let i=0;i<V.length;i++) if(V[i][3]===0){BALLAST_SETTLERS+=V[i][2];ballastVoy++;}
+
+  $("tableIntro").textContent="Compiled from "+fmt(M.rows_used)+" recorded arrivals at the Port of "+
+    "Quebec between 10 May 1817 and 20 November 1839. ‘Settlers’ counts only passengers the "+
+    "record identifies as such.";
+
+  $("notes").innerHTML=
+   '<h3>How to read this</h3><ul>'+
+   '<li><strong>Act I</strong> plots every arrival. <strong>Act II</strong> replays the same seasons '+
+     'showing only vessels recorded as carrying settlers. <strong>Act III</strong> leaves the '+
+     'spreadsheet behind (see below).</li>'+
+   '<li>Each arc leaves its port of origin '+PASSAGE+' days before the vessel’s recorded arrival &mdash; '+
+     'the median passage here ('+fmt(M.passage.n)+' voyages state a duration; the middle 80% ran '+
+     M.passage.p10+'–'+M.passage.p90+' days). Arcs are schematic, not actual tracks.</li>'+
+   '<li>Winter is compressed 8:1 on the timeline. Almost nothing arrives between December and March, '+
+     'because the St Lawrence is frozen.</li>'+
+   '<li>Of '+fmt(ballastVoy)+' vessels declaring no cargo (“in ballast”), those same ships landed '+
+     fmt(BALLAST_SETTLERS)+' settlers — <strong>'+Math.round(BALLAST_SETTLERS/ts*100)+'%</strong> of the total. '+
+     'Cargo and passengers were recorded separately: an empty hold outbound was a cheap berth westbound.</li>'+
+   '</ul><h3>Where Act III comes from</h3><ul>'+
+   '<li>The arrivals record stops at the Quebec quay. Everything in Act III — the Ottawa Valley, '+
+     'Westmeath Township, the Algonquin territorial context and the census figures — is drawn from '+
+     'Jim Clifford and Sam Huckerby, “Logging and Settlement beyond the Rapids: Unmaking Algonquin '+
+     'Space in the Ottawa Valley, 1817–61,” <em>Canadian Historical Review</em> 106, no. 3 (2025), '+
+     'doi:10.3138/chr-2024-0055.</li>'+
+   '<li>That article also finds that the top twenty Quebec merchants receiving ships with settlers '+
+     'took 54% of all settlers in this database, and that thirty-nine of the top forty were shipping '+
+     'timber to the United Kingdom. The merchant column is in the source file but is not charted here, '+
+     'because matching the published figure needs the authors’ own consolidation of naming variants.</li>'+
+   '<li>Nathaniel Gould’s “cheap bridge” is from his <em>Sketch of the Trade of British '+
+     'America</em> (London, 1833), 10.</li>'+
+   '</ul><h3>Sources and caveats</h3><ul>'+
+   '<li>Source: the Quebec Arrivals Database, transcribed from the <em>Quebec Gazette</em> 1817–1839 '+
+     'and theshipslist.com. Published at doi:10.5281/zenodo.15068764.</li>'+
+   '<li>'+fmt(M.rows_total-M.rows_used)+' of '+fmt(M.rows_total)+' rows are omitted from the map for want of '+
+     'a usable date or origin coordinate, so totals here run slightly below the full spreadsheet.</li>'+
+   '<li>Origin regions are assigned geographically, not by modern nationality: <em>Ireland</em> means the '+
+     'island of Ireland, so Belfast, Londonderry and Newry count as Irish ports although the source file '+
+     'files them under the United Kingdom. Scotland is divided from England &amp; Wales along the '+
+     'Solway–Tweed line.</li>'+
+   '<li>Each port name is geocoded to one modern point; vague entries (“Newfoundland”, '+
+     '“Labrador”) sit at an arbitrary centroid, and a few are clearly mis-geocoded — '+
+     '“St Laurence, Nfld” lands in Texas, “Esquimault Bay” on Vancouver Island — '+
+     'and plot at the map edge.</li>'+
+   '<li>Settler counts are transcribed from newspaper arrival notices and are not a complete emigration '+
+     'series; many vessels carried passengers the notice did not enumerate.</li>'+
+   '<li>Basemaps: Natural Earth (public domain), simplified.</li>'+
+   '</ul>';
+}
+
+/* cargo filters for Act I */
+function buildCargoBar(){
+  const bar=$("cargoBar");
+  const mk=(lab,col,ix)=>{
+    const b=document.createElement("button");
+    b.className="cf";b.type="button";
+    b.innerHTML=(col?'<span class="dot" style="background:'+col+'"></span>':"")+lab;
+    b.onclick=()=>{tradeFilter=ix;paintTrade();};
+    return b;
+  };
+  const l=document.createElement("span");
+  l.className="lbl";l.textContent="Show";
+  bar.appendChild(l);
+  bar.appendChild(mk("Every trade","",-1));
+  CARGO_LAB.forEach((lab,ix)=>bar.appendChild(mk(esc(lab),CARGO_COL[ix],ix)));
+}
+
+/* ============================ go ============================ */
+buildNotes();buildTable();buildCargoBar();resize();
+window.addEventListener("resize",()=>{resize();paintTicks();paintMarkers();});
+setAct(1);                     /* opens on the static trade map either way */
+if(window.matchMedia("(prefers-reduced-motion: reduce)").matches)
+  $("hint").textContent="Motion reduced by your system setting — Acts II and III wait for Play.";
+last=performance.now();raf=requestAnimationFrame(frame);
+</script>
+</body>
+</html>
