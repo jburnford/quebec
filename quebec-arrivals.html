@@ -807,6 +807,12 @@ function rebuild(target){
 function land(i){
   const v=V[i],pi=v[1],s=v[2],p=P[pi];
   cumVoy++;cumSet+=s;cumCargo[v[3]]++;
+  /* the season readout counts landings as they happen; the year of the
+     arrival itself governs the rollover, not the playhead's year, so a
+     frame that lands ships from two seasons splits them correctly */
+  const y=dayDate(v[0]).getUTCFullYear();
+  if(y!==curYear){curYear=y;seasonVoy=0;seasonSet=0;}
+  seasonVoy++;seasonSet+=s;
   cumReg[p.reg]=(cumReg[p.reg]||0)+s;
   portAcc[pi]+=(act===2?s:1);
   if(portAcc[pi]>portMax) portMax=portAcc[pi];
