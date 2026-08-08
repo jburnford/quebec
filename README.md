@@ -29,20 +29,18 @@ because that is where timber extraction and settlement are most tightly bound
 together. The other corridors stay drawn on the map throughout so the valley
 never reads as the whole story.
 
-The act carries the article's central argument in parallel with the settlement
-story: the Algonquin and Nipissing chiefs' meetings with Dorchester (1791) and
-Johnson (1798), the 1820 petition to Dalhousie, Darling's 1827
-agriculture-or-nothing terms, Colborne's 1835 undertaking on an Allumette
-Island reserve and Bond Head's 1836 reversal, the 1840 "hunting grounds
-entirely ruined" petition, and the Bagot Commission's 1845 finding that ~800
-squatters had already foreclosed the reserve. The Westmeath close-up makes the
-"dialectic of policy and practice" visible: the township's real survey fabric
-(538 lots) appears with the 1832 surveys and fills lot by lot from the land
-patent index while those reversals happen — every lot sold a fact on the
-ground against the reserve. Holdings of the individuals the article documents
-in both farming and the timber trade (Egan, Carmichael, Bellows, Adams,
-Tucker) light up at the "oats and hay" beat. The act ends with the ongoing
-modern treaty negotiation and Greg Sarazin's words.
+The act carries the article's central argument in parallel: the Algonquin and
+Nipissing chiefs asserted their ownership from 1791 onward and were repeatedly
+put off — Darling's agriculture-only terms in 1827, Colborne's 1835
+undertaking on an Allumette Island reserve, Bond Head's reversal a year
+later, and the Bagot Commission's 1845 finding that ~800 squatters had
+already foreclosed the reserve. The Westmeath close-up makes the "dialectic of
+policy and practice" visible: the township's real survey fabric appears with
+the 1832 surveys and fills lot by lot from the land patent index while those
+reversals happen — every lot sold a fact on the ground against the reserve.
+Holdings of the men the article documents in both farming and timber (Egan,
+Carmichael, Bellows, Adams, Tucker) light up at the "oats and hay" beat. The
+act ends with the ongoing modern treaty negotiation and Greg Sarazin's words.
 
 The hinge between Acts I and II is the record's central finding. Of the 8,955
 vessels that declared no cargo at all — arriving *in ballast*, having crossed
@@ -142,11 +140,11 @@ by Sam Huckerby from Ontario land records. 215 of 538 lots have a dated entry,
 so the fill *understates* ownership — the article finds nearly every lot owned
 by 1852. A dozen entries are paper grants from 1817–21 (militia and Loyalist
 rights), years before any settler arrived. Timber-connected holdings are
-matched by name and can miss holdings recorded under other names. Basemap
-detail at that zoom (river, lakes, Allumette and the Rocher Fendu islands) is
-OpenStreetMap water, simplified to ~50 m, fading in as Natural Earth fades
-out; the dashed ellipse over Allumette Island marks a position, not a
-boundary — no reserve boundary survives to draw.
+matched by name and can miss holdings recorded under other names. Water at
+that zoom (the river, lakes, Allumette and the Rocher Fendu islands) is
+OpenStreetMap, simplified to ~50 m, fading in as Natural Earth fades out. The
+dashed ellipse over Allumette Island marks a position, not a boundary — no
+reserve boundary survives to draw.
 
 **817 rows are not mapped** because they lack a usable date or origin
 coordinate, so totals here run slightly below the full spreadsheet (the article
