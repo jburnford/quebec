@@ -1,5 +1,7 @@
 # Natural Earth downloads, re-fetchable with build/basemap.py
 build/_ne_cache/
+# Overpass download, re-fetchable with build/hydro.py
+build/_osm_cache/
 
 # editor / OS noise
 .DS_Store

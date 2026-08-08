@@ -221,6 +221,9 @@ td{color:var(--ink-2)} td:first-child{color:var(--ink)}
   <blockquote>&ldquo;Above all, it is by means of the lumber vessels going out in ballast, that a
      &lsquo;CHEAP BRIDGE&rsquo; is made for the passage of Emigrants.&rdquo;
      <cite>Nathaniel Gould, London timber importer, 1833</cite></blockquote>
+  <p>Gould was defending the timber tariffs, and he knew the business from inside: he and his
+     partner William Price carried at least twenty-six thousand emigrants to Quebec in their own
+     returning ships.</p>
   <div class="big" id="interBig">0</div>
   <div class="cap">settlers carried in those empty holds</div>
   <button id="bGo2" style="margin-top:12px">Continue to Act II &rarr;</button>
@@ -234,6 +237,22 @@ td{color:var(--ink-2)} td:first-child{color:var(--ink)}
      roads inland.</p>
   <p>That country was not empty, and it had not been surrendered.</p>
   <button id="bGo3" style="margin-top:12px">Continue to Act III &rarr;</button>
+</div></div>
+
+<div class="veil" id="endVeil"><div class="card">
+  <h2>The valley was never empty, and it was never sold.</h2>
+  <p>Settler colonialism requires settlers, and for two decades the returning timber fleet
+     delivered them &mdash; a cheap bridge from the ports of Britain and Ireland to the head of an
+     unceded river. Logging changed the forest; the farms that followed erased it, and they
+     endure. So does the Algonquin nation&rsquo;s claim.</p>
+  <blockquote>&ldquo;The Algonquin Nation was never a newcomer to its territory.&rdquo;
+     <cite>Greg Sarazin, Algonquins of Pikwakanagan First Nation, 1989</cite></blockquote>
+  <p>Canada, Ontario and the Algonquins of Ontario are today in the final stages of
+     negotiating a modern treaty.</p>
+  <div style="margin-top:14px;display:flex;gap:10px;justify-content:center">
+    <button id="bEndNotes">Data &amp; notes</button>
+    <button id="bEndClose">Back to the map</button>
+  </div>
 </div></div>
 
 <div class="veil" id="tableVeil">
@@ -257,13 +276,15 @@ td{color:var(--ink-2)} td:first-child{color:var(--ink)}
 const DATA   = /*__DATA__*/;
 const COAST  = /*__COAST__*/;
 const INLAND = /*__INLAND__*/;
+const WM     = /*__WESTMEATH__*/;
+const HYDRO  = /*__HYDRO__*/;
 
 /* ============================ constants ============================ */
 const M=DATA.meta, V=DATA.voyages, P=DATA.ports, VT=DATA.vt, VTMAX=M.vtmax;
 const QLAT=M.quebec[0], QLON=M.quebec[1];
 const PASSAGE=40, FADE=22, VT_PER_SEC=40;
 const SPEEDS=[1,2,4,0.5];
-const A3MAX=100;                                  /* Act III runs on its own 0-100 clock */
+const A3MAX=140;                                  /* Act III clock: seconds at 1x */
 
 const REG={
   IE :{name:"Ireland",            col:"#3987e5"},
@@ -302,6 +323,9 @@ const V_VALLEY  ={lon0:-78.4,lon1:-73.6,lat0:44.9,lat1:46.7};
 /* deepest zoom still holds the whole run of river from the Chaudière to
    Allumette Island — any tighter and the frame is empty land */
 const V_WEST    ={lon0:-77.8,lon1:-75.4,lat0:45.3,lat1:46.25};
+/* township close-up: tight enough that the 538 lots of the survey fabric
+   read as a grid, wide enough to keep Allumette Island in frame */
+const V_TWP     ={lon0:-77.32,lon1:-76.50,lat0:45.54,lat1:46.02};
 
 /* ============================ Act III script ============================ */
 /* Act I and II are drawn from the arrivals spreadsheet. Act III is not: the
@@ -313,13 +337,13 @@ const ROUTE=[[46.81,-71.21],[46.55,-71.95],[46.34,-72.54],[46.05,-73.12],[45.75,
              [45.82,-76.90],[45.86,-77.04]];
 const PLACES=[
   {n:"Quebec",              lat:46.814,lon:-71.208,at:0},
-  {n:"Trois-Rivières", lat:46.343,lon:-72.543,at:8},
-  {n:"Montreal",            lat:45.502,lon:-73.567,at:16},
-  {n:"Chaudière Falls",lat:45.418,lon:-75.715,at:46},
-  {n:"Lac des Chats",       lat:45.475,lon:-76.240,at:62},
-  {n:"Rocher Fendu Rapids", lat:45.723,lon:-76.750,at:72},
-  {n:"Westmeath",           lat:45.817,lon:-76.900,at:84},
-  {n:"Allumette Island",    lat:45.860,lon:-77.040,at:88}
+  {n:"Trois-Rivières", lat:46.343,lon:-72.543,at:14},
+  {n:"Montreal",            lat:45.502,lon:-73.567,at:24},
+  {n:"Chaudière Falls",lat:45.418,lon:-75.715,at:56},
+  {n:"Lac des Chats",       lat:45.475,lon:-76.240,at:76},
+  {n:"Rocher Fendu Rapids", lat:45.723,lon:-76.750,at:79},
+  {n:"Westmeath",           lat:45.817,lon:-76.900,at:94},
+  {n:"Allumette Island",    lat:45.860,lon:-77.040,at:104}
 ];
 
 /* Quebec was a landing place, not a destination. The database records none of
@@ -344,23 +368,52 @@ const BEATS=[
  {at:36, view:V_VALLEY, y:"One valley of many",
   body:"We take the <strong>Ottawa Valley</strong> &mdash; the Kichi Zībī &mdash; because it is where the timber trade and settlement are most tightly bound together. It is a case study, not the whole story.",
   ctx:"This is the territory of the Algonquin nation. Under the Royal Proclamation of 1763 the Crown was required to negotiate for Indigenous land before settlement. Here it never did, and the territory is unceded to this day."},
- {at:46, view:V_VALLEY, y:"1800 · 1806",
+ {at:46, view:V_VALLEY, y:"1791 · 1798",
+  body:"Before the loggers came, the <strong>Algonquin and Nipissing chiefs</strong> put their ownership on record. In 1791 they told Lord Dorchester they had not sold their lands on the Ottawa. In 1798 they were assured that <em class=\"q\">&ldquo;the King never took the land of his children without paying for them.&rdquo;</em>",
+  ctx:"Surveyors began marking out townships along the river in those same years. No payment ever came, and no treaty was ever signed."},
+ {at:56, view:V_VALLEY, y:"1800 · 1806",
   body:"Philemon Wright settles at the <strong>Chaudière Falls</strong>. Six years later he grasps that the valley&rsquo;s old-growth pine can be squared and floated to the British market.",
   ctx:"The timber trade that filled those westbound holds began here."},
- {at:56, view:V_VALLEY, y:"The feedback loop",
+ {at:66, view:V_VALLEY, y:"The feedback loop",
   body:"Loggers push upriver for better pine. Farmers follow the timber roads, because the camps pay high prices for <strong>oats and hay</strong>. The camps in turn offer winter wages and a market.",
   ctx:"Each made the other possible: cheap passage out, work and a market on arrival."},
- {at:66, view:V_VALLEY, y:"Early 1820s",
-  body:"Settlement reaches the <strong>Lac des Chats</strong>, then stalls at the Rocher Fendu Rapids &mdash; a long, broken stretch of white water at Grand Calumet Island."},
- {at:76, view:V_WEST, y:"1830s",
-  body:"Settlers push <strong>beyond the rapids</strong> into Westmeath Township and the Allumette Island region. Surveys begin in 1832; Crown land sales from 1833."},
- {at:86, view:V_WEST, y:"Westmeath, 1842–52",
-  body:"By 1842: <strong>628 settlers</strong>, 1,684 acres under cultivation. By 1852: <strong>1,146 residents</strong>, 154 farms, 4,598 acres cleared for European crops &mdash; and nearly every lot in the township owned.",
+ {at:76, view:V_VALLEY, y:"Early 1820s",
+  body:"Settlement reaches the <strong>Lac des Chats</strong>, then stalls at the Rocher Fendu Rapids &mdash; a long, broken stretch of white water at Grand Calumet Island.",
+  ctx:"The Algonquin petitioned Lord Dalhousie in 1820: of all the Crown&rsquo;s Indigenous allies from the War of 1812, they alone had been left without a grant of land."},
+ {at:85, view:V_VALLEY, y:"1827",
+  body:"The Crown&rsquo;s terms harden. The superintendent of Indian affairs tells the Algonquin that land will be granted for <em class=\"q\">&ldquo;the purpose of agriculture&rdquo;</em> only &mdash; and none <em class=\"q\">&ldquo;to be kept in a wild state as Hunting Grounds.&rdquo;</em>",
+  ctx:"After the War of 1812 Britain no longer needed Indigenous military allies, and the relationship was managed for economy instead."},
+ {at:94, view:V_TWP, y:"1829 · 1832",
+  body:"Beyond the rapids, the future is drawn before the settlers arrive. Alexander Sherriff canoes through in 1829 and judges nearly the whole of it fit for settlement. Surveys begin in 1832, and <strong>Westmeath Township</strong> appears on paper &mdash; <strong>538 numbered lots</strong> ruled over unceded land.",
+  ctx:"The grid is the township&rsquo;s actual survey fabric, from the research behind Clifford &amp; Huckerby (2025)."},
+ {at:104, view:V_TWP, y:"1835 · 1836",
+  body:"The Algonquin ask for this very ground: <strong>Allumette Island and the shore opposite</strong> &mdash; most of what was becoming Westmeath &mdash; as a reserve. In 1835 Lieutenant-Governor Colborne undertakes to assist them. In 1836 his successor, Francis Bond Head, withdraws the offer, claiming another nation had already sold land that was never its to sell.",
+  ctx:"Crown land sales in Westmeath had opened in 1833. Every lot sold was a fact on the ground against the reserve."},
+ {at:113, view:V_TWP, y:"Westmeath fills, 1833–1852",
+  body:"Lots pass into private hands &mdash; each rectangle tinted by the year of its first Crown grant or sale. By 1842 there are <strong>628 settlers</strong>; by 1852, <strong>1,146 residents and 154 farms</strong>, 4,598 acres cleared for European crops.",
   ctx:"It was ordinary work — cutting timber, raising a barn, keeping a road — that turned unceded territory into private property."},
- {at:93, view:V_VALLEY, y:"The valley by 1852",
-  body:"<strong>85,578</strong> settlers on the Upper Canada side of the valley and <strong>22,903</strong> on the Lower Canada side. A quarter of them were born in Ireland.",
+ {at:122, view:V_TWP, y:"Oats and hay",
+  body:"The largest farms grow feed for the shanty teams. <strong>John Egan</strong>, the valley&rsquo;s biggest timber operator, farms here; so does <strong>Hugh Carmichael</strong>, agent for Gilmour &amp; Co.; <strong>Caleb Bellows</strong> holds a hundred cultivated acres and is listed in the census as a lumberer.",
+  ctx:"Highlighted lots are the holdings of men documented in both farming and the timber trade. By 1852 one farm in ten held 38% of the cultivated land."},
+ {at:130, view:V_TWP, y:"1840 · 1845",
+  body:"<em class=\"q\">&ldquo;Our hunting grounds are entirely ruined,&rdquo;</em> the Algonquin petition in 1840. In 1845 the Bagot Commission recommends against the Allumette reserve: a <em class=\"q\">&ldquo;large white population&rdquo;</em> &mdash; some 800 squatters &mdash; is already on the island. It is surveyed as a township two years later.",
+  ctx:"A decade of illegal clearing outweighed occupation since time immemorial, the Royal Proclamation, and the Crown&rsquo;s own acknowledgements."},
+ {at:137, view:V_VALLEY, y:"The valley by 1852",
+  body:"<strong>85,578</strong> settlers on the Upper Canada side of the valley and <strong>22,903</strong> on the Lower Canada side; a quarter of them born in Ireland. Logging had changed the forest&rsquo;s composition. Farming erased it &mdash; and the fields cleared by the 1860s are farmland still.",
   ctx:"Settler colonialism requires settlers. The timber ships delivered them."}
 ];
+/* the story year that drives the lot fill, keyed to the beats above */
+const YEARS3=[[94,1832],[104,1836],[113,1845],[122,1852],[130,1861]];
+const A3_GRID=92;                 /* the survey grid fades in as the camera closes */
+const A3_TIM=122;                 /* the timber men's holdings light up */
+function storyYear(v){
+  if(v<=YEARS3[0][0]) return YEARS3[0][1];
+  for(let k=0;k<YEARS3.length-1;k++){
+    const [a,ya]=YEARS3[k],[b,yb]=YEARS3[k+1];
+    if(v<b) return ya+(yb-ya)*(v-a)/(b-a);
+  }
+  return YEARS3[YEARS3.length-1][1];
+}
 
 /* ============================ projection ============================ */
 let VIEW={...V_ATLANTIC};
@@ -386,6 +439,35 @@ function lerpView(a,b,t){
   return {lon0:lerp(a.lon0,b.lon0,e),lon1:lerp(a.lon1,b.lon1,e),
           lat0:lerp(a.lat0,b.lat0,e),lat1:lerp(a.lat1,b.lat1,e)};
 }
+
+/* Westmeath lot fabric in (lon, mercatorY), projected once */
+const WLOTS=WM.lots.map(l=>({p:l.r.map(([lo,la])=>[lo,myOf(la)]),y:l.y||0,tim:l.tim||""}));
+
+/* detailed upper-Ottawa water (OSM), projected once, with a bbox for culling.
+   Natural Earth linework hands over to these polygons at township zoom. */
+const HWATER=HYDRO.water.map(w=>{
+  const o=w.o.map(([lo,la])=>[lo,myOf(la)]);
+  const h=(w.h||[]).map(r=>r.map(([lo,la])=>[lo,myOf(la)]));
+  let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
+  for(const [x,y] of o){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;}
+  return {o,h,x0,x1,y0,y1};
+});
+/* label anchors for the named timber men: centroid of each man's largest lot */
+const TIMLAB=(()=>{
+  const best={};
+  for(const l of WLOTS){
+    if(!l.tim) continue;
+    let a=0,cx=0,cy=0;
+    for(let i=0;i<l.p.length;i++){
+      const [x1,y1]=l.p[i],[x2,y2]=l.p[(i+1)%l.p.length],cr=x1*y2-x2*y1;
+      a+=cr;cx+=(x1+x2)*cr;cy+=(y1+y2)*cr;
+    }
+    a/=2;if(!a) continue;cx/=6*a;cy/=6*a;
+    if(!best[l.tim]||Math.abs(a)>best[l.tim].a) best[l.tim]={a:Math.abs(a),x:cx,y:cy};
+  }
+  const keep=["John Egan","Hugh Carmichael","Caleb S. Bellows"];
+  return keep.filter(n=>best[n]).map(n=>({n,x:best[n].x,y:best[n].y}));
+})();
 
 /* ============================ canvases ============================ */
 const cMap=document.getElementById("cMap"),cTrail=document.getElementById("cTrail"),cFx=document.getElementById("cFx");
@@ -428,13 +510,44 @@ function drawBase(){
     for(const ring of COAST){ poly(gMap,ring,true); gMap.fill(); gMap.stroke(); }
   }
   if(aInland>0.01){
-    gMap.globalAlpha=aInland;
+    /* the Natural Earth linework is far too coarse for the township close-up —
+       it would cut straight through the lot grid — so it hands over to the
+       detailed OSM water polygons as the camera closes in. At that zoom the
+       whole window is inland, so a full-frame land fill replaces the clipped
+       NE land polygon (whose clip edge would otherwise show). */
+    const aHydro=Math.max(0,Math.min(1,(2.0-span)/0.7));
+    if(aHydro>0.01){
+      gMap.globalAlpha=aInland*aHydro;
+      gMap.fillStyle="#18262f";gMap.fillRect(0,0,W,H);
+    }
+    gMap.globalAlpha=aInland*(1-aHydro);
     gMap.fillStyle="#18262f";gMap.strokeStyle="#2d4356";gMap.lineWidth=1;
     for(const ring of INLAND.land){ poly(gMap,ring,true); gMap.fill(); gMap.stroke(); }
+    gMap.globalAlpha=aInland*(1-aHydro);
     gMap.fillStyle="#0a141c";gMap.strokeStyle="#2b4157";
     for(const ring of INLAND.lakes){ poly(gMap,ring,true); gMap.fill(); gMap.stroke(); }
+    const aRiv=Math.max(0.12,Math.min(1,(span-0.9)/0.9))*(1-aHydro);
+    gMap.globalAlpha=aInland*aRiv;
     gMap.strokeStyle="#3d6b8c";gMap.lineWidth=Math.max(1.2,Math.min(4,SC/28));
     for(const ring of INLAND.rivers){ poly(gMap,ring,false); gMap.stroke(); }
+    if(aHydro>0.01){
+      /* river, lakes and islands — islands are holes, so the land shows through */
+      const wx0=VIEW.lon0,wx1=VIEW.lon1,wy0=myOf(VIEW.lat0),wy1=myOf(VIEW.lat1);
+      gMap.globalAlpha=aInland*aHydro;
+      gMap.fillStyle="#0a141c";gMap.strokeStyle="#2b4157";gMap.lineWidth=1;
+      for(const w of HWATER){
+        if(w.x1<wx0||w.x0>wx1||w.y1<wy0||w.y0>wy1) continue;
+        gMap.beginPath();
+        for(const ring of [w.o,...w.h]){
+          for(let i=0;i<ring.length;i++){
+            const x=ring[i][0]*SC+OX,y=OY-ring[i][1]*SC;
+            i?gMap.lineTo(x,y):gMap.moveTo(x,y);
+          }
+          gMap.closePath();
+        }
+        gMap.fill("evenodd");gMap.stroke();
+      }
+    }
   }
   gMap.globalAlpha=1;
 
@@ -724,7 +837,7 @@ function frame(ts){
   if(act===1){ uiAcc+=dt; return; }               /* static: drawn once on entry */
   const maxT=act===3?A3MAX:VTMAX;
   if(playing&&!dragging){
-    const rate=act===3?(A3MAX/95):VT_PER_SEC;      /* Act III ~95s at 1x */
+    const rate=act===3?1:VT_PER_SEC;               /* Act III clock runs in seconds */
     advance(vt+dt*rate*SPEEDS[speedIx]);
     if(vt>=maxT){playing=false;setPlayBtn();onActEnd();}
   }
@@ -821,7 +934,7 @@ function step3(v){
   VIEW=lerpView(a.view,b.view,(v-a.at)/span);
   layout();drawBase();
   checkNote3(v);
-  const front=Math.max(0,Math.min(1,(v-6)/86));
+  const front=Math.max(0,Math.min(1,(v-6)/80));
   if(flow.length<90&&Math.random()<.55) flow.push({u:Math.random()*.04,sp:.0016+Math.random()*.0026});
   for(let k=flow.length-1;k>=0;k--){
     flow[k].u+=flow[k].sp;
@@ -830,7 +943,53 @@ function step3(v){
 }
 function render3(){
   gFx.clearRect(0,0,W,H);gTrail.clearRect(0,0,W,H);
-  const front=Math.max(0,Math.min(1,(vt-6)/86));
+  const front=Math.max(0,Math.min(1,(vt-6)/80));
+
+  /* the survey fabric: Westmeath's lots, drawn from the real lot polygons.
+     Grid lines appear with the 1832 surveys; each lot tints by the year of
+     its first Crown grant or sale as the story year advances; the holdings
+     of the documented timber men light up at the "oats and hay" beat. */
+  if(vt>=A3_GRID){
+    const gA=Math.min(1,(vt-A3_GRID)/5);
+    const span=VIEW.lon1-VIEW.lon0;
+    const zA=Math.max(0,Math.min(1,(3.6-span)/1.2));   /* fades as the camera pulls back */
+    const A=gA*zA;
+    if(A>0.02){
+      const yr=storyYear(vt);
+      const timOn=vt>=A3_TIM?Math.min(1,(vt-A3_TIM)/4):0;
+      gFx.lineWidth=0.7;gFx.lineJoin="round";
+      for(const l of WLOTS){
+        gFx.beginPath();
+        for(let i=0;i<l.p.length;i++){
+          const x=l.p[i][0]*SC+OX,y=OY-l.p[i][1]*SC;
+          i?gFx.lineTo(x,y):gFx.moveTo(x,y);
+        }
+        gFx.closePath();
+        if(l.tim&&timOn>0){
+          gFx.fillStyle="rgba(217,89,38,"+(.60*A*timOn).toFixed(3)+")";gFx.fill();
+        }else if(l.y&&l.y<=yr){
+          /* recently granted lots flash brighter, then settle */
+          const age=Math.max(0,Math.min(1,(yr-l.y)/2));
+          gFx.fillStyle="rgba(201,133,0,"+((.20+.28*(1-age))*A).toFixed(3)+")";gFx.fill();
+        }
+        gFx.strokeStyle="rgba(255,255,255,"+(.13*A).toFixed(3)+")";gFx.stroke();
+      }
+      if(timOn>0.05){
+        const fam=getComputedStyle(document.body).fontFamily;
+        gFx.font="600 11.5px "+fam;gFx.textAlign="center";
+        for(const t of TIMLAB){
+          const x=t.x*SC+OX,y=OY-t.y*SC;
+          if(x<10||x>W-10||y<10||y>H-150) continue;
+          const w=gFx.measureText(t.n).width;
+          gFx.fillStyle="rgba(9,18,25,"+(.55*timOn).toFixed(2)+")";
+          gFx.fillRect(x-w/2-3,y-9,w+6,13);
+          gFx.fillStyle="rgba(255,255,255,"+(.92*timOn*A).toFixed(2)+")";
+          gFx.fillText(t.n,x,y+1);
+        }
+        gFx.textAlign="left";
+      }
+    }
+  }
 
   /* the other destinations, once the story admits them. Kept visible but
      recessive afterwards, so the valley never reads as the only outcome. */
@@ -854,8 +1013,28 @@ function render3(){
     gFx.textAlign="left";
   }
 
-  /* the route travelled so far */
-  gFx.strokeStyle="rgba(255,224,173,.5)";gFx.lineWidth=2;gFx.lineCap="round";
+  /* Allumette Island, the reserve the Algonquin asked for in 1835. A dashed
+     position marker in the same schematic language as the corridors — no
+     reserve boundary survives to draw. */
+  if(vt>=103){
+    const t=Math.min(1,(vt-103)/4);
+    const span=VIEW.lon1-VIEW.lon0;
+    const zA=Math.max(0,Math.min(1,(3.6-span)/1.2));
+    if(t*zA>0.03){
+      gFx.strokeStyle="rgba(217,89,38,"+(.5*t*zA).toFixed(3)+")";
+      gFx.lineWidth=1.6;gFx.setLineDash([6,5]);
+      gFx.beginPath();
+      /* fitted to the island's real footprint in the OSM water layer */
+      gFx.ellipse(px(-77.066),py(45.861),0.17*SC,0.075*SC,0.30,0,7);
+      gFx.stroke();gFx.setLineDash([]);
+    }
+  }
+
+  /* the route travelled so far. Like the basemap river, its waypoints are
+     schematic, so it dims at township zoom rather than crossing the fabric */
+  const spanNow=VIEW.lon1-VIEW.lon0;
+  const rA=Math.max(0.16,Math.min(1,(spanNow-0.9)/0.9));
+  gFx.strokeStyle="rgba(255,224,173,"+(.5*rA).toFixed(3)+")";gFx.lineWidth=2;gFx.lineCap="round";
   gFx.beginPath();
   const steps=160;
   for(let q=0;q<=steps;q++){
@@ -868,7 +1047,7 @@ function render3(){
   gFx.globalCompositeOperation="lighter";
   for(const f of flow){
     const pt=routeAt(f.u);
-    gFx.fillStyle="rgba(255,224,173,.85)";
+    gFx.fillStyle="rgba(255,224,173,"+(.85*rA).toFixed(3)+")";
     gFx.beginPath();gFx.arc(px(pt[1]),py(pt[0]),1.9,0,7);gFx.fill();
   }
   gFx.globalCompositeOperation="source-over";
@@ -876,8 +1055,8 @@ function render3(){
   /* the river's Algonquin name, once the story names it. Placed as a label on
      the valley — this is not a territorial boundary, which the sources here
      do not provide. */
-  if(vt>=30){
-    const t=Math.min(1,(vt-30)/5);
+  if(vt>=38){
+    const t=Math.min(1,(vt-38)/5);
     const fam=getComputedStyle(document.body).fontFamily;
     gFx.textAlign="center";
     gFx.font="600 15px "+fam;
@@ -927,10 +1106,21 @@ function paintUI(v){
     return;
   }
   if(act===3){
-    elClock.textContent="Beyond the rapids";
-    elHero.textContent=fmt(M.settlers_total);
-    elHeroLab.textContent="settlers landed at Quebec";
-    elSeason.textContent="1817–1839";
+    if(vt>=A3_GRID+2&&vt<137){
+      /* once the survey fabric is on screen, the readout counts the lots
+         passing into private hands — live from the patent index */
+      const yr=Math.floor(storyYear(vt));
+      let n=0;for(const l of WLOTS) if(l.y&&l.y<=yr) n++;
+      elClock.innerHTML="Westmeath &middot; "+yr;
+      elHero.textContent=fmt(n);
+      elHeroLab.textContent="lots granted or sold";
+      elSeason.textContent="of "+fmt(WLOTS.length)+" surveyed parcels";
+    }else{
+      elClock.textContent="Beyond the rapids";
+      elHero.textContent=fmt(M.settlers_total);
+      elHeroLab.textContent="settlers landed at Quebec";
+      elSeason.textContent="1817–1839";
+    }
     elIce.classList.remove("on");
   }else{
     const dt=dayDate(vtToDay(v)),mo=dt.getUTCMonth();
@@ -989,7 +1179,8 @@ function paintLegend(){
   else if(act===2) items=MAIN_REG.map(r=>({c:REG[r].col,l:REG[r].name}))
                     .concat([{c:REG.BNA.col,l:"Elsewhere"}]);
   else items=[{c:"#ffe0ad",l:"Route inland from Quebec"},
-              {c:"#33566f",l:"Rivers — the St Lawrence and the Kichi Zībī"},
+              {c:"#c98500",l:"Westmeath lots, tinted by year of first Crown grant or sale"},
+              {c:"#d95926",l:"Holdings of documented timber men"},
               {c:"#8b8f96",l:"Act III is drawn from Clifford &amp; Huckerby (2025), not the arrivals data"}];
   let html=items.map(i=>
     '<div class="lg"><span class="sw" style="background:'+i.c+'"></span>'+i.l+'</div>').join("");
@@ -1044,7 +1235,7 @@ const NOTES={1:[
   ctx:"Post-war collapse in grain prices and the decline of domestic linen weaving pushed Irish families toward the ports."},
  {d:"1825-07-01",y:"1825",body:"A summer of organised departures from the south of Ireland.",
   ctx:"Peter Robinson&rsquo;s government-assisted parties carried some two thousand emigrants from the Cork region to the Upper Canadian backwoods in 1825, after a smaller trial in 1823."},
- {d:"1831-07-01",y:"1831",body:"The record breaks: more settlers land this season than in any before it, and the arcs thicken right across the North Channel.",
+ {d:"1831-07-01",y:"1831",body:"The record breaks: more settlers land this season than in any before it &mdash; and as the settlers rise, the count of ships arriving <strong>wholly in ballast</strong> falls. The timber fleet is converting empty holds into berths.",
   ctx:"The Passenger Act of 1828 had loosened the limits on how many people a ship might carry, and fares fell."},
  {d:"1832-06-08",y:"June 1832",body:"The peak season &mdash; and the worst. <strong>Cholera</strong> comes up the river with the emigrant ships.",
   ctx:"A quarantine station had opened at Grosse Île, thirty miles below Quebec, that spring. It did not hold; thousands died in Quebec and Montreal that summer."},
@@ -1169,17 +1360,20 @@ function seek(v){
 }
 const setPlayBtn=()=>{$("bPlay").textContent=playing?"Pause":"Play";};
 
-let seen={1:false,2:false};
+let seen={1:false,2:false,3:false};
 function onActEnd(){
   if(act===2&&!seen[2]){seen[2]=true;$("inter2Veil").classList.add("on");}
+  if(act===3&&!seen[3]){seen[3]=true;$("endVeil").classList.add("on");}
 }
 /* Act I is static, so the reveal is reached by the Continue button */
 $("bNext").onclick=()=>{
   if(act===1){seen[1]=true;$("interBig").textContent=fmt(BALLAST_SETTLERS);
     $("interVeil").classList.add("on");}
   else if(act===2){$("inter2Veil").classList.add("on");}
-  else $("bReplay").click();
+  else $("endVeil").classList.add("on");
 };
+$("bEndNotes").onclick=()=>{$("endVeil").classList.remove("on");$("tableVeil").classList.add("on");};
+$("bEndClose").onclick=()=>$("endVeil").classList.remove("on");
 
 $("bPlay").onclick=()=>{const maxT=act===3?A3MAX:VTMAX;if(vt>=maxT)seek(0);playing=!playing;setPlayBtn();};
 $("bAct1").onclick=()=>{setAct(1);playing=true;setPlayBtn();};
@@ -1194,7 +1388,7 @@ $("bCloseTable").onclick=()=>$("tableVeil").classList.remove("on");
 document.addEventListener("keydown",e=>{
   if(e.key==="Escape") document.querySelectorAll(".veil").forEach(v=>v.classList.remove("on"));
   if(e.key===" "){e.preventDefault();$("bPlay").click();}
-  const stepv=act===3?3:120;
+  const stepv=act===3?5:120;
   if(e.key==="ArrowRight") seek(vt+stepv);
   if(e.key==="ArrowLeft")  seek(vt-stepv);
 });
@@ -1281,16 +1475,34 @@ function buildTable(){
      'Cargo and passengers were recorded separately: an empty hold outbound was a cheap berth westbound.</li>'+
    '</ul><h3>Where Act III comes from</h3><ul>'+
    '<li>The arrivals record stops at the Quebec quay. Everything in Act III — the Ottawa Valley, '+
-     'Westmeath Township, the Algonquin territorial context and the census figures — is drawn from '+
-     'Jim Clifford and Sam Huckerby, “Logging and Settlement beyond the Rapids: Unmaking Algonquin '+
-     'Space in the Ottawa Valley, 1817–61,” <em>Canadian Historical Review</em> 106, no. 3 (2025), '+
-     'doi:10.3138/chr-2024-0055.</li>'+
+     'Westmeath Township, the Algonquin territorial context, the petitions and the census figures — is '+
+     'drawn from Jim Clifford and Sam Huckerby, “Logging and Settlement beyond the Rapids: Unmaking '+
+     'Algonquin Space in the Ottawa Valley, 1817–61,” <em>Canadian Historical Review</em> 106, no. 3 '+
+     '(2025), doi:10.3138/chr-2024-0055, and the sources cited there — chiefly the petitions and '+
+     'council records transcribed in Joan Holmes &amp; Associates’ <em>Report on the Algonquins of '+
+     'Golden Lake Claim</em> (1993).</li>'+
+   '<li>The Westmeath grid is the township’s survey fabric (Ontario GeoHub, improved lot fabric), '+
+     'joined to a lot-by-lot index of first Crown grants and sales compiled by Sam Huckerby from '+
+     'Ontario land records for the article. '+fmt(WLOTS.filter(l=>l.y).length)+' of '+fmt(WLOTS.length)+
+     ' lots have a dated first entry; the rest stay uncoloured, so the fill understates how much land '+
+     'was spoken for — the article finds nearly every lot owned by 1852. A handful of entries are '+
+     'paper grants from 1817–21, made years before anyone settled: private property arrived on paper '+
+     'first.</li>'+
+   '<li>Highlighted holdings are individuals the article documents in both farming and the timber '+
+     'trade (John Egan, Hugh Carmichael, Caleb Bellows, Samuel Adams, George Tucker). Matching is by '+
+     'name in the patent index, so it can miss holdings recorded under other names.</li>'+
    '<li>That article also finds that the top twenty Quebec merchants receiving ships with settlers '+
      'took 54% of all settlers in this database, and that thirty-nine of the top forty were shipping '+
      'timber to the United Kingdom. The merchant column is in the source file but is not charted here, '+
      'because matching the published figure needs the authors’ own consolidation of naming variants.</li>'+
+   '<li>Economic historians long doubted the timber–emigration link because yearly immigration '+
+     'totals correlate poorly with timber export volumes. The article reads the fleet the other way: '+
+     'it offered <em>elastic</em> westbound capacity. In the record seasons of 1830–32 the number of '+
+     'vessels arriving wholly in ballast fell as settler numbers rose, then recovered when '+
+     'emigration fell back — empty holds converting to berths and back.</li>'+
    '<li>Nathaniel Gould’s “cheap bridge” is from his <em>Sketch of the Trade of British '+
-     'America</em> (London, 1833), 10.</li>'+
+     'America</em> (London, 1833), 10. Gould was defending the timber tariffs, not observing '+
+     'neutrally; the arrivals record is what bears him out.</li>'+
    '</ul><h3>Sources and caveats</h3><ul>'+
    '<li>Source: the Quebec Arrivals Database, transcribed from the <em>Quebec Gazette</em> 1817–1839 '+
      'and theshipslist.com. Published at doi:10.5281/zenodo.15068764.</li>'+
@@ -1306,7 +1518,9 @@ function buildTable(){
      'and plot at the map edge.</li>'+
    '<li>Settler counts are transcribed from newspaper arrival notices and are not a complete emigration '+
      'series; many vessels carried passengers the notice did not enumerate.</li>'+
-   '<li>Basemaps: Natural Earth (public domain), simplified.</li>'+
+   '<li>Basemaps: Natural Earth (public domain), simplified. The detailed river, lake and island '+
+     'polygons in the Act III close-up are &copy; OpenStreetMap contributors (ODbL), simplified '+
+     'to about 50 m.</li>'+
    '</ul>';
 }
 

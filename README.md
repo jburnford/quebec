@@ -14,7 +14,7 @@ network access at runtime.
 |---|---|---|
 | **I · The Port** | *Static.* All 17,062 mapped arrivals at once — the geography of the port's trade, each origin sized by voyages and coloured by the trade it mostly served. Filter to one cargo to isolate that run | from the database |
 | **II · The Crossing** | *Animated.* The same seasons, showing only ships carrying settlers. Each dot is one vessel in passage along its sea lane, its area proportional to the people aboard | from the database |
-| **III · Beyond the Rapids** | *Animated.* Where the crossing led — and it did not lead to one place | from Clifford & Huckerby (2025) |
+| **III · Beyond the Rapids** | *Animated.* Where the crossing led — and it did not lead to one place. Ends in Westmeath Township, where the actual survey fabric fills lot by lot as land passes into private hands, against the arc of the Algonquin petitions | from Clifford & Huckerby (2025) and its research materials |
 
 Act I is deliberately not a ship-by-ship animation. Its subject is structure, not
 sequence: three overlapping systems — a North Atlantic run to Britain and
@@ -28,6 +28,21 @@ then follows *one* of those routes — the Ottawa Valley — as a case study,
 because that is where timber extraction and settlement are most tightly bound
 together. The other corridors stay drawn on the map throughout so the valley
 never reads as the whole story.
+
+The act carries the article's central argument in parallel with the settlement
+story: the Algonquin and Nipissing chiefs' meetings with Dorchester (1791) and
+Johnson (1798), the 1820 petition to Dalhousie, Darling's 1827
+agriculture-or-nothing terms, Colborne's 1835 undertaking on an Allumette
+Island reserve and Bond Head's 1836 reversal, the 1840 "hunting grounds
+entirely ruined" petition, and the Bagot Commission's 1845 finding that ~800
+squatters had already foreclosed the reserve. The Westmeath close-up makes the
+"dialectic of policy and practice" visible: the township's real survey fabric
+(538 lots) appears with the 1832 surveys and fills lot by lot from the land
+patent index while those reversals happen — every lot sold a fact on the
+ground against the reserve. Holdings of the individuals the article documents
+in both farming and the timber trade (Egan, Carmichael, Bellows, Adams,
+Tucker) light up at the "oats and hay" beat. The act ends with the ongoing
+modern treaty negotiation and Greg Sarazin's words.
 
 The hinge between Acts I and II is the record's central finding. Of the 8,955
 vessels that declared no cargo at all — arriving *in ballast*, having crossed
@@ -57,8 +72,8 @@ newspapers logged each vessel as it reached the quay and then stopped.
 python build/make.py
 ```
 
-Requires `pandas` and `openpyxl`. Reads `Quebec_All_Data.xlsx` plus the two
-committed basemap files, and writes `quebec-arrivals.html`.
+Requires `pandas` and `openpyxl`. Reads `Quebec_All_Data.xlsx` plus the four
+committed basemap/data files, and writes `quebec-arrivals.html`.
 
 To regenerate the basemaps from Natural Earth (only needed if you change the map
 windows — it downloads ~3 MB and caches it in `build/_ne_cache/`):
@@ -67,6 +82,15 @@ windows — it downloads ~3 MB and caches it in `build/_ne_cache/`):
 python build/basemap.py
 ```
 
+`build/westmeath.json` and `build/hydro.json` are committed too, so `make.py`
+never needs the sources below. To regenerate them:
+
+- `python build/westmeath.py` reads the Westmeath lot fabric and the land
+  patent index from the HGIS Lab share (`G:`); requires `pyogrio`, `shapely`,
+  `pyproj`.
+- `python build/hydro.py` fetches upper-Ottawa water polygons from OpenStreetMap
+  via Overpass (cached in `build/_osm_cache/`); requires `shapely`.
+
 | File | What it is |
 |---|---|
 | `build/make.py` | Data preparation and assembly |
@@ -74,6 +98,10 @@ python build/basemap.py
 | `build/basemap.py` | Fetches Natural Earth, clips and simplifies |
 | `build/coast.json` | Atlantic coastline, 110m, 26 rings |
 | `build/inland.json` | St Lawrence–Ottawa land, lakes and rivers, 50m |
+| `build/westmeath.py` | Exports the lot fabric + patent index from the lab share |
+| `build/westmeath.json` | 538 Westmeath lots; 215 dated first grants/sales; timber flags |
+| `build/hydro.py` | Fetches and simplifies OSM water for the upper Ottawa |
+| `build/hydro.json` | River, lakes and 46 islands, ~50 m resolution, ODbL |
 
 ## Decisions worth knowing about
 
@@ -106,6 +134,19 @@ reasonable reconstruction of where ships went, not evidence of it.
 In Act II each dot leaves its origin 40 days before the recorded arrival — the
 median passage in this database. The inland corridors in Act III are schematic in
 the same way and carry no counts: the database records nothing past the quay.
+
+**The Westmeath sequence is drawn from real parcels.** The grid is the
+township's improved lot fabric (Ontario GeoHub); each lot's tint year is the
+earliest dated entry in a lot-by-lot index of Crown grants and sales compiled
+by Sam Huckerby from Ontario land records. 215 of 538 lots have a dated entry,
+so the fill *understates* ownership — the article finds nearly every lot owned
+by 1852. A dozen entries are paper grants from 1817–21 (militia and Loyalist
+rights), years before any settler arrived. Timber-connected holdings are
+matched by name and can miss holdings recorded under other names. Basemap
+detail at that zoom (river, lakes, Allumette and the Rocher Fendu islands) is
+OpenStreetMap water, simplified to ~50 m, fading in as Natural Earth fades
+out; the dashed ellipse over Allumette Island marks a position, not a
+boundary — no reserve boundary survives to draw.
 
 **817 rows are not mapped** because they lack a usable date or origin
 coordinate, so totals here run slightly below the full spreadsheet (the article
@@ -144,4 +185,9 @@ chroma and contrast against the map surface; `prefers-reduced-motion` respected
   Review* 106, no. 3 (September 2025).
   doi:[10.3138/chr-2024-0055](https://doi.org/10.3138/chr-2024-0055)
 - Nathaniel Gould, *Sketch of the Trade of British America* (London, 1833), 10.
-- Basemaps: [Natural Earth](https://www.naturalearthdata.com/), public domain.
+- Westmeath lot fabric: Ontario GeoHub (improved lot fabric), joined to a land
+  patent index compiled by Sam Huckerby from Ontario land records (research
+  materials for the article above).
+- Basemaps: [Natural Earth](https://www.naturalearthdata.com/), public domain;
+  upper-Ottawa water polygons © [OpenStreetMap](https://www.openstreetmap.org/copyright)
+  contributors, ODbL.

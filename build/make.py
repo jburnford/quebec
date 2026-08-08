@@ -2,7 +2,8 @@
 
     python build/make.py
 
-Reads   ../Quebec_All_Data.xlsx, build/template.html, build/coast.json, build/inland.json
+Reads   ../Quebec_All_Data.xlsx, build/template.html, build/coast.json,
+        build/inland.json, build/westmeath.json
 Writes  ../quebec-arrivals.html   (one self-contained file, no network at runtime)
 """
 import pandas as pd
@@ -213,6 +214,8 @@ sub = {
     "/*__DATA__*/": json.dumps(payload, separators=(",", ":"), ensure_ascii=False),
     "/*__COAST__*/": io.open(os.path.join(HERE, "coast.json"), encoding="utf-8").read(),
     "/*__INLAND__*/": io.open(os.path.join(HERE, "inland.json"), encoding="utf-8").read(),
+    "/*__WESTMEATH__*/": io.open(os.path.join(HERE, "westmeath.json"), encoding="utf-8").read(),
+    "/*__HYDRO__*/": io.open(os.path.join(HERE, "hydro.json"), encoding="utf-8").read(),
 }
 for token, value in sub.items():
     assert token in tpl, f"missing token {token} in template.html"
