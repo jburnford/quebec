@@ -57,7 +57,10 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
    lower centre-left, is clear (0). */
 #note.actI {left:auto;right:22px;top:auto;bottom:150px;transform:none;
   max-width:min(520px,calc(100vw - 900px))}
-#note.actII{left:auto;right:20%;top:auto;bottom:165px;transform:none;max-width:352px}
+/* Act II clears the region panel in px, not %: the panel's left edge sits at
+   (100vw - 262px), so a percentage right-offset crosses under it on any window
+   narrower than ~1310px. 300px keeps a gap at every width the panel is shown. */
+#note.actII{left:auto;right:300px;top:auto;bottom:160px;transform:none;max-width:352px}
 #panel.hi{top:min(25vh,200px)}
 /* the note sits over the busiest part of the map, so it carries its own surface */
 #note{background:rgba(9,18,25,.80);backdrop-filter:blur(10px);
