@@ -30,6 +30,7 @@ jobs:
           mkdir /tmp/site
           cp quebec-arrivals.html /tmp/site/index.html
           cp quebec-arrivals.html /tmp/site/quebec-arrivals.html
+          touch /tmp/site/.nojekyll   # serve verbatim — Jekyll mangles the page
           cd /tmp/site
           git init -b gh-pages
           git config user.name "github-actions[bot]"
