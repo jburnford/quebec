@@ -1,7 +1,12 @@
-# Publishes the visualization to GitHub Pages on every push to main.
-# The page is one self-contained file: it is served both at the site root
-# (index.html) and at its own name, so old links keep working.
-name: Deploy to GitHub Pages
+# Republishes the visualization to the gh-pages branch on every push to main.
+# Creating/pushing gh-pages is what enables and updates GitHub Pages here —
+# it needs only the default workflow token (contents: write), unlike the
+# actions/deploy-pages route, whose site-enablement step requires admin
+# rights the token doesn't have.
+#
+# The page is one self-contained file: it is served at the site root
+# (index.html) and at its own name, so both URLs work.
+name: Publish to GitHub Pages
 
 on:
   push:
@@ -9,32 +14,26 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: pages
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  publish:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
-        with:
-          enablement: true
-      - name: Stage site
+      - name: Stage and push site
         run: |
-          mkdir _site
-          cp quebec-arrivals.html _site/index.html
-          cp quebec-arrivals.html _site/quebec-arrivals.html
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: _site
-      - id: deployment
-        uses: actions/deploy-pages@v4
+          mkdir /tmp/site
+          cp quebec-arrivals.html /tmp/site/index.html
+          cp quebec-arrivals.html /tmp/site/quebec-arrivals.html
+          cd /tmp/site
+          git init -b gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Publish site from ${GITHUB_SHA::9}"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
