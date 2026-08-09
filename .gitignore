@@ -3,6 +3,10 @@ build/_ne_cache/
 # Overpass download, re-fetchable with build/hydro.py
 build/_osm_cache/
 
+# video renders, re-creatable with build/video_act2.py
+*.mp4
+build/_video_frames/
+
 # editor / OS noise
 .DS_Store
 Thumbs.db
