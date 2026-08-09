@@ -14,13 +14,15 @@ to 1080p, which renders all the type a third larger than desktop — sized for
 a phone feed. Control buttons and the caption dismiss button are hidden for
 the recording; the legend, timeline, clock and captions stay.
 
-Requires playwright (with chromium installed) and imageio-ffmpeg.
+Requires playwright and av (PyAV). PyAV is used for the encode because it
+carries FFmpeg as libraries inside Python — standalone ffmpeg.exe downloads
+land under AppData, which managed machines block by group policy.
 """
+import glob
 import os
 import shutil
-import subprocess
 
-import imageio_ffmpeg
+import av
 from playwright.sync_api import sync_playwright
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -97,14 +99,23 @@ def main():
             k += 1
         browser.close()
 
-    ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
-    subprocess.run([
-        ffmpeg, "-y", "-framerate", str(FPS),
-        "-i", os.path.join(FRAMES, "f%05d.png"),
-        "-vf", "scale=1920:1080:flags=lanczos",
-        "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "20",
-        "-movflags", "+faststart", OUT,
-    ], check=True)
+    files = sorted(glob.glob(os.path.join(FRAMES, "f*.png")))
+    out = av.open(OUT, "w")
+    stream = out.add_stream("libx264", rate=FPS)
+    stream.width, stream.height = 1920, 1080
+    stream.pix_fmt = "yuv420p"
+    stream.options = {"crf": "20", "preset": "medium", "movflags": "+faststart"}
+    for i, f in enumerate(files):
+        frame = next(av.open(f).decode(video=0))
+        frame = frame.reformat(width=1920, height=1080, format="yuv420p",
+                               interpolation=av.video.reformatter.Interpolation.LANCZOS)
+        for pkt in stream.encode(frame):
+            out.mux(pkt)
+        if (i + 1) % 600 == 0:
+            print(f"  encoded {i + 1}/{len(files)}")
+    for pkt in stream.encode():
+        out.mux(pkt)
+    out.close()
     shutil.rmtree(FRAMES, ignore_errors=True)
     print(f"wrote {OUT} ({os.path.getsize(OUT)/1e6:.1f} MB)")
 
