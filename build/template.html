@@ -66,7 +66,11 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 #note{background:rgba(9,18,25,.80);backdrop-filter:blur(10px);
   border:1px solid var(--rule);border-left:2px solid var(--s4);
   border-radius:10px;padding:13px 16px 14px}
-#noteYear{font-size:12px;letter-spacing:.14em;color:var(--s4);margin-bottom:7px;font-weight:600}
+#noteX{position:absolute;top:5px;right:7px;pointer-events:auto;background:none;border:none;
+  color:var(--ink-3);font-size:17px;line-height:1;padding:3px 7px;cursor:pointer;border-radius:6px}
+#noteX:hover{color:var(--ink);background:rgba(255,255,255,.10)}
+#noteYear{font-size:12px;letter-spacing:.14em;color:var(--s4);margin-bottom:7px;font-weight:600;
+  padding-right:22px}
 #noteBody{font-size:13.5px;line-height:1.62;color:var(--ink-2)}
 #noteBody strong{color:var(--ink);font-weight:600}
 #noteBody em.q{color:var(--ink);font-style:italic}
@@ -141,18 +145,20 @@ td{color:var(--ink-2)} td:first-child{color:var(--ink)}
 
 @media (max-width:1100px){
   #panel{display:none}
-  #note,#note.actI,#note.actII{left:16px;right:16px;transform:none;max-width:none;
-        top:min(30vh,210px);bottom:auto}
+  /* dock the caption bottom-right, just above the control bar, instead of
+     letting it sit across the middle of the map. --barH is measured in JS
+     because the bar's height varies by act (Act I adds the cargo filters). */
+  #note,#note.actI,#note.actII{left:auto;right:16px;transform:none;top:auto;
+        bottom:calc(var(--barH,170px) + 12px);max-width:min(440px,calc(100vw - 32px))}
   #head{max-width:min(64vw,42ch);padding:16px}
   #read{padding:16px}
-  #note{max-width:min(72vw,330px)}
   #bar{padding:12px 16px 14px}
   #legend{gap:9px 14px}
   .hint{display:none}
 }
 @media (max-width:760px){
-  #note,#note.actI,#note.actII{max-width:none;left:16px;right:16px;position:absolute;
-        top:min(30vh,210px);bottom:auto;transform:none}
+  #note,#note.actI,#note.actII{left:16px;right:16px;max-width:none;top:auto;
+        bottom:calc(var(--barH,170px) + 12px);transform:none}
   #actTitle{font-size:20px} #actSub{font-size:12.5px}
   #legend{font-size:11px}
   button{padding:6px 10px;font-size:12px}
@@ -185,7 +191,8 @@ td{color:var(--ink-2)} td:first-child{color:var(--ink)}
     <div id="rows"></div>
   </div>
 
-  <div class="ui" id="note"><div id="noteYear"></div><div id="noteBody"></div></div>
+  <div class="ui" id="note"><button id="noteX" aria-label="Dismiss note">&times;</button>
+    <div id="noteYear"></div><div id="noteBody"></div></div>
 
   <div class="ui" id="bar">
     <div id="legend"></div>
@@ -470,12 +477,17 @@ const TIMLAB=(()=>{
 const cMap=document.getElementById("cMap"),cTrail=document.getElementById("cTrail"),cFx=document.getElementById("cFx");
 const gMap=cMap.getContext("2d"),gTrail=cTrail.getContext("2d"),gFx=cFx.getContext("2d");
 
+/* the caption docks above the control bar on narrow viewports; the bar's
+   height varies by act and by wrapping, so it is measured, not guessed */
+const setBarH=()=>document.documentElement.style
+  .setProperty("--barH",document.getElementById("bar").offsetHeight+"px");
+
 function resize(){
   DPR=Math.min(window.devicePixelRatio||1,2);
   W=window.innerWidth;H=window.innerHeight;
   for(const c of [cMap,cTrail,cFx]){c.width=W*DPR;c.height=H*DPR;}
   for(const g of [gMap,gTrail,gFx]) g.setTransform(DPR,0,0,DPR,0,0);
-  layout(); drawBase();
+  layout(); drawBase(); setBarH();
   if(act===1) renderTrade();
   else if(act===2) rebuild(vt);
 }
@@ -1276,6 +1288,7 @@ function showNote(n){
   $("note").classList.add("on");
 }
 const hideNote=()=>$("note").classList.remove("on");
+$("noteX").onclick=e=>{e.stopPropagation();hideNote();};
 
 function paintMarkers(){
   document.querySelectorAll(".mk").forEach(e=>e.remove());
@@ -1338,6 +1351,7 @@ function setAct(a,at){
   paintLegend();paintTicks();paintMarkers();
   if(a===1){ playing=false;setPlayBtn();paintTrade(); }
   else seek(at===undefined?0:at);
+  setBarH();                 /* the bar's height just changed with the act */
 }
 
 /* Act I entry point: recompute the static layer and its readouts */
@@ -1354,6 +1368,7 @@ function paintTrade(){
   renderTrade();paintUI(0);paintLegend();
   showNote(TRADE_NOTES[String(f)]);
   [...$("cargoBar").children].forEach((b,ix)=>b.classList.toggle("on",ix-2===f));
+  setBarH();                 /* legend wrapping can change the bar's height */
 }
 function seek(v){
   const maxT=act===3?A3MAX:VTMAX;
