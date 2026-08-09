@@ -104,7 +104,10 @@ def main():
     stream = out.add_stream("libx264", rate=FPS)
     stream.width, stream.height = 1920, 1080
     stream.pix_fmt = "yuv420p"
-    stream.options = {"crf": "20", "preset": "medium", "movflags": "+faststart"}
+    # explicit bitrate: PyAV's libx264 wrapper ignores a crf option here and
+    # encodes at an enormous default rate (a 75 s run came out at 143 MB)
+    stream.bit_rate = 3_500_000
+    stream.options = {"preset": "medium"}
     for i, f in enumerate(files):
         frame = next(av.open(f).decode(video=0))
         frame = frame.reformat(width=1920, height=1080, format="yuv420p",
