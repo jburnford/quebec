@@ -1428,8 +1428,9 @@ cFx.addEventListener("mousemove",e=>{
     const top=p.cc.map((n,ix)=>[n,ix]).sort((a,b)=>b[0]-a[0]).filter(x=>x[0]>0).slice(0,3);
     extra='<br>'+top.map(([n,ix])=>esc(CARGO_LAB[ix])+' '+n).join(' &middot; ');
   }
-  elTip.innerHTML='<b>'+p.name+'</b><span>'+fmt(p.voyages)+' voyages'+
-    (p.settlers?' &middot; '+fmt(p.settlers)+' settlers':'')+'<br>'+REG[p.reg].name+extra+'</span>';
+  const pl=(n,w)=>fmt(n)+' '+w+(n===1?'':'s');
+  elTip.innerHTML='<b>'+p.name+'</b><span>'+pl(p.voyages,'voyage')+
+    (p.settlers?' &middot; '+pl(p.settlers,'settler'):'')+'<br>'+REG[p.reg].name+extra+'</span>';
   elTip.style.opacity=1;
   elTip.style.left=Math.min(W-elTip.offsetWidth-8,e.clientX+14)+"px";
   elTip.style.top=Math.max(8,e.clientY-elTip.offsetHeight-12)+"px";
