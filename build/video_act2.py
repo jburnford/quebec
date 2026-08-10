@@ -6,11 +6,10 @@ Loads quebec-arrivals.html headless, steps the Act II animation
 deterministically (one advance() per frame, so nothing ever stutters or drops
 frames), screenshots each step, and encodes an H.264 MP4:
 
-  cheap-bridge-act2.mp4         1920x1080, 30 fps, ~80 s: the full 23
-                                seasons, closing on the "record ends at
-                                the quay" card. CRF 17 — the YouTube master.
-  cheap-bridge-act2-social.mp4  the same video at CRF 23 for feeds with
-                                upload limits.
+  cheap-bridge-act2.mp4    1920x1080, 30 fps, ~80 s: the full 23 seasons,
+                           closing on the "record ends at the quay" card.
+                           CRF 17 comes out under 10 MB — fine for YouTube
+                           and social alike.
 
 The page is captured at 1440x810 with a 2x device scale factor and downscaled
 to 1080p, which renders all the type a third larger than desktop — sized for
@@ -104,8 +103,7 @@ def main():
         browser.close()
 
     files = sorted(glob.glob(os.path.join(FRAMES, "f*.png")))
-    encode(files, OUT, crf=17)                                # YouTube master
-    encode(files, OUT.replace(".mp4", "-social.mp4"), crf=23) # feed-sized
+    encode(files, OUT, crf=17)
     shutil.rmtree(FRAMES, ignore_errors=True)
 
 
