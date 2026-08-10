@@ -128,6 +128,9 @@ def encode(files, out_path, crf):
         # whole video collapses into one instant
         frame.pts = i
         frame.time_base = Fraction(1, FPS)
+        # ...and pict_type I, which the encoder honours as a forced intra
+        # frame: without this every frame is a keyframe and the file balloons
+        frame.pict_type = 0
         for pkt in stream.encode(frame):
             out.mux(pkt)
         if (i + 1) % 600 == 0:
