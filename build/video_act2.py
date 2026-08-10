@@ -6,8 +6,11 @@ Loads quebec-arrivals.html headless, steps the Act II animation
 deterministically (one advance() per frame, so nothing ever stutters or drops
 frames), screenshots each step, and encodes an H.264 MP4:
 
-  cheap-bridge-act2.mp4    1920x1080, 30 fps, ~80 s: the full 23 seasons,
-                           closing on the "record ends at the quay" card.
+  cheap-bridge-act2.mp4         1920x1080, 30 fps, ~80 s: the full 23
+                                seasons, closing on the "record ends at
+                                the quay" card. CRF 17 — the YouTube master.
+  cheap-bridge-act2-social.mp4  the same video at CRF 23 for feeds with
+                                upload limits.
 
 The page is captured at 1440x810 with a 2x device scale factor and downscaled
 to 1080p, which renders all the type a third larger than desktop — sized for
@@ -101,15 +104,22 @@ def main():
         browser.close()
 
     files = sorted(glob.glob(os.path.join(FRAMES, "f*.png")))
-    out = av.open(OUT, "w")
+    encode(files, OUT, crf=17)                                # YouTube master
+    encode(files, OUT.replace(".mp4", "-social.mp4"), crf=23) # feed-sized
+    shutil.rmtree(FRAMES, ignore_errors=True)
+
+
+def encode(files, out_path, crf):
+    """CRF (quality-based) encoding: a fixed average bitrate visibly bands the
+    near-black water and smears the small moving dots. 'animation' tuning
+    suits flat synthetic imagery like this map."""
+    out = av.open(out_path, "w")
     stream = out.add_stream("libx264", rate=FPS)
     stream.width, stream.height = 1920, 1080
     stream.pix_fmt = "yuv420p"
-    # CRF (quality-based) encoding: a fixed average bitrate visibly bands the
-    # near-black water and smears the small moving dots. 'animation' tuning
-    # suits flat synthetic imagery like this map.
-    stream.options = {"crf": "17", "preset": "slow", "tune": "animation"}
+    stream.options = {"crf": str(crf), "preset": "slow", "tune": "animation"}
     stream.time_base = Fraction(1, FPS)
+    stream.codec_context.gop_size = 300   # PyAV defaults to an I-frame every 12
     for i, f in enumerate(files):
         frame = next(av.open(f).decode(video=0))
         frame = frame.reformat(width=1920, height=1080, format="yuv420p",
@@ -125,8 +135,7 @@ def main():
     for pkt in stream.encode():
         out.mux(pkt)
     out.close()
-    shutil.rmtree(FRAMES, ignore_errors=True)
-    print(f"wrote {OUT} ({os.path.getsize(OUT)/1e6:.1f} MB)")
+    print(f"wrote {out_path} ({os.path.getsize(out_path)/1e6:.1f} MB)")
 
 
 if __name__ == "__main__":
