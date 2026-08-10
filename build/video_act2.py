@@ -21,6 +21,7 @@ land under AppData, which managed machines block by group policy.
 import glob
 import os
 import shutil
+from fractions import Fraction
 
 import av
 from playwright.sync_api import sync_playwright
@@ -104,14 +105,19 @@ def main():
     stream = out.add_stream("libx264", rate=FPS)
     stream.width, stream.height = 1920, 1080
     stream.pix_fmt = "yuv420p"
-    # explicit bitrate: PyAV's libx264 wrapper ignores a crf option here and
-    # encodes at an enormous default rate (a 75 s run came out at 143 MB)
-    stream.bit_rate = 3_500_000
-    stream.options = {"preset": "medium"}
+    # CRF (quality-based) encoding: a fixed average bitrate visibly bands the
+    # near-black water and smears the small moving dots. 'animation' tuning
+    # suits flat synthetic imagery like this map.
+    stream.options = {"crf": "17", "preset": "slow", "tune": "animation"}
+    stream.time_base = Fraction(1, FPS)
     for i, f in enumerate(files):
         frame = next(av.open(f).decode(video=0))
         frame = frame.reformat(width=1920, height=1080, format="yuv420p",
                                interpolation=av.video.reformatter.Interpolation.LANCZOS)
+        # decoded PNGs all carry pts 0; stamp real presentation times or the
+        # whole video collapses into one instant
+        frame.pts = i
+        frame.time_base = Fraction(1, FPS)
         for pkt in stream.encode(frame):
             out.mux(pkt)
         if (i + 1) % 600 == 0:
