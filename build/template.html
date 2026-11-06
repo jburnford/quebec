@@ -293,7 +293,7 @@ const M=DATA.meta, V=DATA.voyages, P=DATA.ports, VT=DATA.vt, VTMAX=M.vtmax;
 const QLAT=M.quebec[0], QLON=M.quebec[1];
 const PASSAGE=40, FADE=22, VT_PER_SEC=40;
 const SPEEDS=[1,2,4,0.5];
-const A3MAX=140;                                  /* Act III clock: seconds at 1x */
+const A3MAX=204;                                  /* Act III clock: seconds at 1x */
 
 const REG={
   IE :{name:"Ireland",            col:"#3987e5"},
@@ -329,6 +329,10 @@ const V_CORRIDOR={lon0:-78.4,lon1:-69.6,lat0:44.2,lat1:48.2};
 /* wide enough to hold Upper Canada, the Eastern Townships and the border */
 const V_DEST    ={lon0:-83,lon1:-69,lat0:41.5,lat1:47.5};
 const V_VALLEY  ={lon0:-78.4,lon1:-73.6,lat0:44.9,lat1:46.7};
+/* the port and its south-shore mills: Etchemin, New Liverpool, Montmorency */
+const V_QUEBEC  ={lon0:-72.6,lon1:-70.2,lat0:46.15,lat1:47.15};
+/* Lake Champlain and the Richelieu, with Montreal at the top of frame */
+const V_CHAMPLAIN={lon0:-75.2,lon1:-71.6,lat0:44.3,lat1:45.85};
 /* deepest zoom still holds the whole run of river from the Chaudière to
    Allumette Island — any tighter and the frame is empty land */
 const V_WEST    ={lon0:-77.8,lon1:-75.4,lat0:45.3,lat1:46.25};
@@ -346,13 +350,16 @@ const ROUTE=[[46.81,-71.21],[46.55,-71.95],[46.34,-72.54],[46.05,-73.12],[45.75,
              [45.82,-76.90],[45.86,-77.04]];
 const PLACES=[
   {n:"Quebec",              lat:46.814,lon:-71.208,at:0},
-  {n:"Trois-Rivières", lat:46.343,lon:-72.543,at:14},
-  {n:"Montreal",            lat:45.502,lon:-73.567,at:24},
-  {n:"Chaudière Falls",lat:45.418,lon:-75.715,at:56},
-  {n:"Lac des Chats",       lat:45.475,lon:-76.240,at:76},
-  {n:"Rocher Fendu Rapids", lat:45.723,lon:-76.750,at:79},
-  {n:"Westmeath",           lat:45.817,lon:-76.900,at:94},
-  {n:"Allumette Island",    lat:45.860,lon:-77.040,at:104}
+  {n:"Etchemin Mills",      lat:46.745,lon:-71.235,at:13},
+  {n:"Lake Champlain",      lat:44.750,lon:-73.250,at:27},
+  {n:"Montreal",            lat:45.502,lon:-73.567,at:28},
+  {n:"Trois-Rivières", lat:46.343,lon:-72.543,at:42},
+  {n:"Hawkesbury",          lat:45.607,lon:-74.615,at:44},
+  {n:"Chaudière Falls",lat:45.418,lon:-75.715,at:120},
+  {n:"Lac des Chats",       lat:45.475,lon:-76.240,at:140},
+  {n:"Rocher Fendu Rapids", lat:45.723,lon:-76.750,at:143},
+  {n:"Westmeath",           lat:45.817,lon:-76.900,at:158},
+  {n:"Allumette Island",    lat:45.860,lon:-77.040,at:168}
 ];
 
 /* Quebec was a landing place, not a destination. The database records none of
@@ -368,63 +375,75 @@ const DESTS=[
 ];
 const BEATS=[
  {at:0, view:V_GULF, y:"1817–1839",
-  body:"Every crossing in the last two acts ended here. <strong>"+"{SET}"+" settlers</strong> came ashore at Quebec in twenty-three seasons &mdash; and then walked out of the record."},
- {at:12, view:V_CORRIDOR, y:"Up the St Lawrence",
-  body:"They moved inland by river. Montreal first &mdash; and from Montreal, in every direction."},
- {at:18, view:V_CORRIDOR, y:"The setting &middot; 1800&ndash;1820",
-  body:"Hold the settlers mid-river and step back a generation. Henry Caldwell&rsquo;s <strong>Etchemin mill</strong> opposite Quebec was sawing for export by 1804, the <strong>Hawkesbury mill</strong> on the lower Ottawa by 1805 &mdash; and when Napoleon&rsquo;s blockade cut Britain off from Baltic timber in 1807, exports through Quebec <strong>tripled in three years</strong>. The emigrants of the last two acts sailed into an economy already built.",
-  ctx:"Squares are sawmills, diamonds timber slides and dams, dots recorded pine and timber stands &mdash; each appears as period sources first document it. In these years most of the oak and pine shipped from Quebec came through Lake Champlain, south of the American border."},
- {at:24, view:V_DEST, y:"Quebec was not a destination",
+  body:"Every crossing in the last two acts ended here. <strong>"+"{SET}"+" settlers</strong> came ashore at Quebec in twenty-three seasons &mdash; and then walked out of the record. Before we follow them inland, hold them at the quay: the story of where they went begins a generation earlier, with timber.",
+  ctx:"From here the map follows the trade itself &mdash; every mark on it is a documented site, dated and cited to a period source."},
+ {at:12, view:V_QUEBEC, y:"1804 &middot; The port&rsquo;s mills",
+  body:"Quebec&rsquo;s merchants were building an export industry before there was a boom. Henry Caldwell&rsquo;s <strong>Etchemin mill</strong>, across the river from the port, was sawing for export by 1804; timber coves lined the shore below. <strong>Sawmills</strong> are squares, <strong>timber slides and dams</strong> diamonds, <strong>recorded pine and timber stands</strong> dots.",
+  ctx:"Hover any mark to read the document behind it."},
+ {at:26, view:V_CHAMPLAIN, y:"1807 &middot; The blockade",
+  body:"The Bombardment of Copenhagen cuts Britain off from Baltic timber, and exports through Quebec <strong>triple in three years</strong>. The first great supply is not Canadian at all: squared oak and pine come down the <strong>Richelieu from Lake Champlain</strong>, where Vermont&rsquo;s industry was already established.",
+  ctx:"Between 1800 and 1812 the Lake Champlain region supplied most of the oak and pine shipped from Quebec. Customs ledgers, more than maps, record that early trade &mdash; only a few of its sites are plotted here."},
+ {at:40, view:V_CORRIDOR, y:"1815 &middot; Up the St Lawrence",
+  body:"Joseph Bouchette&rsquo;s 1815 survey is the first map of the colony&rsquo;s mills &mdash; and it shows them lining the St Lawrence from Quebec to Montreal. On the lower Ottawa, the <strong>Hawkesbury mill</strong> had been sawing since 1805. Watch the marks spread upriver.",
+  ctx:"Most of the points appearing now are georeferenced from Bouchette&rsquo;s plates."},
+ {at:54, view:V_CORRIDOR, y:"By 1820",
+  body:"In under two decades the lower river has industrialised: mills at the falls, timber coves below Quebec, squared pine stacked on the beaches each spring. One question hangs over the fleet that carries it east &mdash; holds full of timber pay for the voyage out, but what pays for the trip back?"},
+ {at:66, view:V_GULF, y:"&ldquo;A cheap bridge&rdquo;",
+  body:"Very often, nothing: the timber ships returned <strong>in ballast</strong>, empty but for sand and stone. Nathaniel Gould, defending the timber tariffs in 1833, named what those empty holds became: <em class=\"q\">&ldquo;it is by means of the lumber vessels going out in ballast, that a &lsquo;CHEAP BRIDGE&rsquo; is made for the passage of Emigrants.&rdquo;</em>",
+  ctx:"Gould was a timber merchant defending his trade, but the arrivals record bears him out: {BAL} settlers &mdash; {BALPCT}% of everyone in this database &mdash; landed from vessels that had declared no cargo at all."},
+ {at:78, view:V_CORRIDOR, y:"1817 &middot; The settlers return",
+  body:"Now bring the settlers back into the story. The cheap bridge lands them at Quebec by the thousand, and they move inland by river, <strong>following the shantymen</strong> &mdash; Montreal first, and from Montreal in every direction."},
+ {at:88, view:V_DEST, y:"Quebec was not a destination",
   body:"Most pushed on into <strong>Upper Canada</strong>, filling the townships of what is now southern Ontario. Others took up land in the <strong>Eastern Townships</strong>; many thousands carried on into the <strong>United States</strong>.",
   ctx:"Upper Canada counted 150,066 people in 1824 and 487,053 by 1842. This act follows only one of these routes."},
- {at:36, view:V_VALLEY, y:"One valley of many",
+ {at:100, view:V_VALLEY, y:"One valley of many",
   body:"We take the <strong>Ottawa Valley</strong> &mdash; the Kichi Zībī &mdash; because by the 1820s it was becoming the centre of timber extraction, and it is where the trade and settlement are most tightly bound together. It is a case study, not the whole story.",
   ctx:"This is the territory of the Algonquin nation. Under the Royal Proclamation of 1763 the Crown was required to negotiate for Indigenous land before settlement. Here it never did, and the territory is unceded to this day."},
- {at:46, view:V_VALLEY, y:"1791 · 1798",
+ {at:110, view:V_VALLEY, y:"1791 · 1798",
   body:"Before the loggers came, the <strong>Algonquin and Nipissing chiefs</strong> put their ownership on record. In 1791 they told Lord Dorchester they had not sold their lands on the Ottawa. In 1798 they were assured that <em class=\"q\">&ldquo;the King never took the land of his children without paying for them.&rdquo;</em>",
   ctx:"Surveyors began marking out townships along the river in those same years. No payment ever came, and no treaty was ever signed."},
- {at:56, view:V_VALLEY, y:"1800 · 1806",
+ {at:120, view:V_VALLEY, y:"1800 · 1806",
   body:"Philemon Wright settles at the <strong>Chaudière Falls</strong>. Six years later he grasps that the valley&rsquo;s old-growth pine can be squared and floated to the British market &mdash; and the industry already thriving on the lower river has a reason to come up this one.",
   ctx:"The blockade boom arrived the year after Wright&rsquo;s first raft: behind wartime tariffs, even the valley&rsquo;s distant pine was worth the long float downriver."},
- {at:66, view:V_VALLEY, y:"The feedback loop",
+ {at:130, view:V_VALLEY, y:"The feedback loop",
   body:"Loggers push upriver for better pine. Farmers follow the timber roads, because the camps pay high prices for <strong>oats and hay</strong>. The camps in turn offer winter wages and a market.",
   ctx:"Each made the other possible: cheap passage out, work and a market on arrival. The ring marks the furthest site the sources record &mdash; watch it move upriver, deeper into unceded Algonquin territory."},
- {at:76, view:V_VALLEY, y:"Early 1820s",
+ {at:140, view:V_VALLEY, y:"Early 1820s",
   body:"Settlement reaches the <strong>Lac des Chats</strong>, then stalls at the Rocher Fendu Rapids &mdash; a long, broken stretch of white water at Grand Calumet Island.",
   ctx:"The Algonquin petitioned Lord Dalhousie in 1820: of all the Crown&rsquo;s Indigenous allies from the War of 1812, they alone had been left without a grant of land."},
- {at:85, view:V_VALLEY, y:"1827",
+ {at:149, view:V_VALLEY, y:"1827",
   body:"The Crown&rsquo;s terms harden. The superintendent of Indian affairs tells the Algonquin that land will be granted for <em class=\"q\">&ldquo;the purpose of agriculture&rdquo;</em> only &mdash; and none <em class=\"q\">&ldquo;to be kept in a wild state as Hunting Grounds.&rdquo;</em>",
   ctx:"After the War of 1812 Britain no longer needed Indigenous military allies, and the relationship was managed for economy instead."},
- {at:94, view:V_TWP, y:"1829 · 1832",
+ {at:158, view:V_TWP, y:"1829 · 1832",
   body:"The future is drawn before the settlers arrive: Alexander Sherriff canoes through in 1829 and judges nearly all of it fit for settlement. Surveys begin in 1832, and <strong>Westmeath Township</strong> appears on paper &mdash; <strong>538 numbered lots</strong> ruled over unceded land.",
   ctx:"The grid is the township&rsquo;s actual survey fabric, from the research behind Clifford &amp; Huckerby (2025)."},
- {at:104, view:V_TWP, y:"1835 · 1836",
+ {at:168, view:V_TWP, y:"1835 · 1836",
   body:"The Algonquin ask for this very ground &mdash; <strong>Allumette Island and the shore opposite</strong>, most of what was becoming Westmeath &mdash; as a reserve. In 1835 Lieutenant-Governor Colborne promises to assist them. A year later his successor Francis Bond Head withdraws the offer, claiming another nation had already sold land that was never its to sell.",
   ctx:"Crown land sales in Westmeath had opened in 1833. Every lot sold was a fact on the ground against the reserve."},
- {at:113, view:V_TWP, y:"Westmeath fills, 1833–1852",
+ {at:177, view:V_TWP, y:"Westmeath fills, 1833–1852",
   body:"Lots pass into private hands &mdash; each rectangle tinted by the year of its first Crown grant or sale. By 1842 there are <strong>628 settlers</strong>; by 1852, <strong>1,146 residents and 154 farms</strong>, 4,598 acres cleared for European crops.",
   ctx:"It was ordinary work — cutting timber, raising a barn, keeping a road — that turned unceded territory into private property."},
- {at:122, view:V_TWP, y:"Oats and hay",
+ {at:186, view:V_TWP, y:"Oats and hay",
   body:"The largest farms grow feed for the shanty teams. <strong>John Egan</strong>, the valley&rsquo;s biggest timber operator, farms here; so does <strong>Hugh Carmichael</strong>, agent for Gilmour &amp; Co.; <strong>Caleb Bellows</strong> holds a hundred cultivated acres and is listed in the census as a lumberer.",
   ctx:"Highlighted lots are the holdings of men documented in both farming and the timber trade. By 1852 one farm in ten held 38% of the cultivated land."},
- {at:130, view:V_TWP, y:"1840 · 1845",
+ {at:194, view:V_TWP, y:"1840 · 1845",
   body:"<em class=\"q\">&ldquo;Our hunting grounds are entirely ruined,&rdquo;</em> the Algonquin petition in 1840. In 1845 the Bagot Commission recommends against the Allumette reserve: a <em class=\"q\">&ldquo;large white population&rdquo;</em> &mdash; some 800 squatters &mdash; is already on the island. It is surveyed as a township two years later.",
   ctx:"A decade of illegal clearing outweighed occupation since time immemorial, the Royal Proclamation, and the Crown&rsquo;s own acknowledgements."},
- {at:137, view:V_VALLEY, y:"The valley by 1852",
+ {at:201, view:V_VALLEY, y:"The valley by 1852",
   body:"<strong>85,578</strong> settlers on the Upper Canada side of the valley and <strong>22,903</strong> on the Lower Canada side; a quarter of them born in Ireland. Logging had changed the forest&rsquo;s composition. Farming erased it &mdash; and the fields cleared by the 1860s are farmland still.",
-  ctx:"Where the loggers passed, the forest grew back &mdash; but not the same forest. The old-growth white and red pine did not return; other species took their place, and later logging chased a moving frontier rather than any regrowth. Supplying Britain consumed the pine of over two million acres: roughly all the forest left in the British Isles."}
+  ctx:"Where the loggers passed, the forest grew back &mdash; but not the same forest. The old-growth white and red pine did not return; other species took their place, and later logging cut new ground further upriver rather than any regrowth. Supplying Britain consumed the pine of over two million acres: roughly all the forest left in the British Isles."}
 ];
 /* the story year that drives the lot fill, keyed to the beats above */
-const YEARS3=[[94,1832],[104,1836],[113,1845],[122,1852],[130,1861]];
-/* a longer clock for the timber-industry points. It starts while the camera
-   is still on the Quebec–Montreal corridor, so the lower river industrialises
-   on screen (1805–1820) before the story turns up the Ottawa — and then the
-   documented sites march upriver with the beats. */
-const TIMYRS=[[18,1804],[24,1812],[36,1820],[76,1823],[85,1827]].concat(YEARS3);
-const A3_GRID=92;                 /* the survey grid fades in as the camera closes */
-const A3_TIM=122;                 /* the timber men's holdings light up */
-const A3_PTS=18;                  /* the timber-industry layer switches on */
-const A3_REACH=66;                /* the furthest-site ring, once the feedback-loop beat names it
+const YEARS3=[[158,1832],[168,1836],[177,1845],[186,1852],[194,1861]];
+/* the clock for the timber-industry points. The act now opens with the trade:
+   a minute of documented sites spreading out from Quebec (1804–1820) before
+   the cheap-bridge beat hands the story back to the settlers — then the
+   sites march up the Ottawa with the valley beats. */
+const TIMYRS=[[12,1804],[26,1809],[40,1815],[54,1818],[66,1820],[140,1823],[149,1827]].concat(YEARS3);
+const A3_GRID=156;                /* the survey grid fades in as the camera closes */
+const A3_TIM=186;                 /* the timber men's holdings light up */
+const A3_PTS=12;                  /* the timber-industry layer switches on */
+const A3_REACH=130;               /* the furthest-site ring, once the feedback-loop beat names it
                                      (the beats before it flash back to the 1790s, where a ring
                                      dated 1821 would read as an anachronism) */
 function yearOn(T,v){
@@ -972,8 +991,9 @@ function step3(v){
   VIEW=lerpView(a.view,b.view,(v-a.at)/span);
   layout();drawBase();
   checkNote3(v);
-  const front=Math.max(0,Math.min(1,(v-6)/80));
-  if(flow.length<90&&Math.random()<.55) flow.push({u:Math.random()*.04,sp:.0016+Math.random()*.0026});
+  /* the settlers' route begins once the cheap-bridge beat hands back to them */
+  const front=Math.max(0,Math.min(1,(v-76)/80));
+  if(v>76&&flow.length<90&&Math.random()<.55) flow.push({u:Math.random()*.04,sp:.0016+Math.random()*.0026});
   for(let k=flow.length-1;k>=0;k--){
     flow[k].u+=flow[k].sp;
     if(flow[k].u>front+.02) flow.splice(k,1);
@@ -981,7 +1001,7 @@ function step3(v){
 }
 function render3(){
   gFx.clearRect(0,0,W,H);gTrail.clearRect(0,0,W,H);
-  const front=Math.max(0,Math.min(1,(vt-6)/80));
+  const front=Math.max(0,Math.min(1,(vt-76)/80));
 
   /* the survey fabric: Westmeath's lots, drawn from the real lot polygons.
      Grid lines appear with the 1832 surveys; each lot tints by the year of
@@ -1031,8 +1051,8 @@ function render3(){
 
   /* the other destinations, once the story admits them. Kept visible but
      recessive afterwards, so the valley never reads as the only outcome. */
-  if(vt>=22){
-    const t=Math.min(1,(vt-22)/5), late=vt>40?.55:1;
+  if(vt>=86){
+    const t=Math.min(1,(vt-86)/5), late=vt>104?.55:1;
     const fam=getComputedStyle(document.body).fontFamily;
     gFx.lineCap="round";
     for(const d of DESTS){
@@ -1054,8 +1074,8 @@ function render3(){
   /* Allumette Island, the reserve the Algonquin asked for in 1835. A dashed
      position marker in the same schematic language as the corridors — no
      reserve boundary survives to draw. */
-  if(vt>=103){
-    const t=Math.min(1,(vt-103)/4);
+  if(vt>=166){
+    const t=Math.min(1,(vt-166)/4);
     const span=VIEW.lon1-VIEW.lon0;
     const zA=Math.max(0,Math.min(1,(3.6-span)/1.2));
     if(t*zA>0.03){
@@ -1154,8 +1174,8 @@ function render3(){
   /* the river's Algonquin name, once the story names it. Placed as a label on
      the valley — this is not a territorial boundary, which the sources here
      do not provide. */
-  if(vt>=38){
-    const t=Math.min(1,(vt-38)/5);
+  if(vt>=102){
+    const t=Math.min(1,(vt-102)/5);
     const fam=getComputedStyle(document.body).fontFamily;
     gFx.textAlign="center";
     gFx.font="600 15px "+fam;
@@ -1205,7 +1225,7 @@ function paintUI(v){
     return;
   }
   if(act===3){
-    if(vt>=A3_GRID+2&&vt<137){
+    if(vt>=A3_GRID+2&&vt<201){
       /* once the survey fabric is on screen, the readout counts the lots
          passing into private hands — live from the patent index */
       const yr=Math.floor(storyYear(vt));
@@ -1214,7 +1234,7 @@ function paintUI(v){
       elHero.textContent=fmt(n);
       elHeroLab.textContent="lots granted or sold";
       elSeason.textContent="of "+fmt(WLOTS.length)+" surveyed parcels";
-    }else if(vt>=A3_PTS+3&&vt<137){
+    }else if(vt>=A3_PTS+3&&vt<201){
       /* the readout follows the timber layer: how many sites the sources
          have recorded so far, and how far up the valley the trade has gone */
       const yr=Math.floor(timYear(vt));
@@ -1225,7 +1245,7 @@ function paintUI(v){
       elHeroLab.textContent="documented timber sites";
       elSeason.textContent=vt>=A3_REACH&&far
         ? "the furthest "+far+" km up the Kichi Zībī"
-        : (vt<36?"the lower river industrialises first":"recorded in period sources");
+        : (vt<66?"the lower river industrialises first":"recorded in period sources");
     }else{
       elClock.textContent="Beyond the rapids";
       elHero.textContent=fmt(M.settlers_total);
@@ -1382,8 +1402,10 @@ function checkNote3(v){
 }
 function showNote(n){
   $("noteYear").innerHTML=n.y;
-  $("noteBody").innerHTML=n.body.replace("{SET}",fmt(M.settlers_total))+
-    (n.ctx?'<span class="ctx">'+n.ctx+'</span>':"");
+  $("noteBody").innerHTML=(n.body+(n.ctx?'<span class="ctx">'+n.ctx+'</span>':""))
+    .replace("{SET}",fmt(M.settlers_total))
+    .replace("{BAL}",fmt(BALLAST_SETTLERS))
+    .replace("{BALPCT}",Math.round(BALLAST_SETTLERS/M.settlers_total*100));
   $("note").classList.add("on");
 }
 const hideNote=()=>$("note").classList.remove("on");
@@ -1429,7 +1451,7 @@ function paintTicks(){
 const ACTS={
  1:{t:"An Atlantic Port",s:"Twenty-three seasons of arrivals at once — the whole geography of the port's trade. Isolate a cargo below to see the run that carried it."},
  2:{t:"The Crossing",s:"The same twenty-three seasons again, counting only the ships that carried settlers. Each dot is one vessel in passage, sized by the number of people aboard."},
- 3:{t:"Beyond the Rapids",s:"Where the cheap bridge led: up the St Lawrence and the Kichi Zībī into unceded Algonquin territory."}
+ 3:{t:"Beyond the Rapids",s:"The trade that built the cheap bridge — and where it led: up the St Lawrence and the Kichi Zībī into unceded Algonquin territory."}
 };
 function setAct(a,at){
   act=a;
@@ -1655,8 +1677,8 @@ function buildTable(){
      'of some 2.3 million acres — roughly equal to all the forest remaining in the British '+
      'Isles. Selective logging transformed rather than destroyed the Laurentian forest: most '+
      'logged regions were still wooded in 1900, but the mature pine was gone, other species '+
-     'grew in its place, and the industry survived by moving its frontier, not by harvesting '+
-     'regrowth.</li>'+
+     'grew in its place, and the industry survived by cutting ever further upriver, not by '+
+     'harvesting regrowth.</li>'+
    '<li>That article also finds that the top twenty Quebec merchants receiving ships with settlers '+
      'took 54% of all settlers in this database, and that thirty-nine of the top forty were shipping '+
      'timber to the United Kingdom. The merchant column is in the source file but is not charted here, '+
