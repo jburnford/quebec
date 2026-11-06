@@ -370,8 +370,10 @@ const BEATS=[
  {at:0, view:V_GULF, y:"1817–1839",
   body:"Every crossing in the last two acts ended here. <strong>"+"{SET}"+" settlers</strong> came ashore at Quebec in twenty-three seasons &mdash; and then walked out of the record."},
  {at:12, view:V_CORRIDOR, y:"Up the St Lawrence",
-  body:"They moved inland by river. Montreal first &mdash; and from Montreal, in every direction. The timber industry travelled ahead of them: <strong>sawmills</strong> (squares), <strong>timber slides and dams</strong> (diamonds) and <strong>recorded pine stands</strong> (dots) appear as period sources first document them.",
-  ctx:"Quebec merchants were investing before the trade boomed: Henry Caldwell&rsquo;s Etchemin mill opposite Quebec was sawing by 1804, the Hawkesbury mill on the lower Ottawa by 1805 &mdash; and in the earliest years most oak and pine shipped from Quebec actually came through Lake Champlain, south of the border."},
+  body:"They moved inland by river. Montreal first &mdash; and from Montreal, in every direction."},
+ {at:18, view:V_CORRIDOR, y:"The setting &middot; 1800&ndash;1820",
+  body:"Hold the settlers mid-river and step back a generation. Henry Caldwell&rsquo;s <strong>Etchemin mill</strong> opposite Quebec was sawing for export by 1804, the <strong>Hawkesbury mill</strong> on the lower Ottawa by 1805 &mdash; and when Napoleon&rsquo;s blockade cut Britain off from Baltic timber in 1807, exports through Quebec <strong>tripled in three years</strong>. The emigrants of the last two acts sailed into an economy already built.",
+  ctx:"Squares are sawmills, diamonds timber slides and dams, dots recorded pine and timber stands &mdash; each appears as period sources first document it. In these years most of the oak and pine shipped from Quebec came through Lake Champlain, south of the American border."},
  {at:24, view:V_DEST, y:"Quebec was not a destination",
   body:"Most pushed on into <strong>Upper Canada</strong>, filling the townships of what is now southern Ontario. Others took up land in the <strong>Eastern Townships</strong>; many thousands carried on into the <strong>United States</strong>.",
   ctx:"Upper Canada counted 150,066 people in 1824 and 487,053 by 1842. This act follows only one of these routes."},
@@ -382,8 +384,8 @@ const BEATS=[
   body:"Before the loggers came, the <strong>Algonquin and Nipissing chiefs</strong> put their ownership on record. In 1791 they told Lord Dorchester they had not sold their lands on the Ottawa. In 1798 they were assured that <em class=\"q\">&ldquo;the King never took the land of his children without paying for them.&rdquo;</em>",
   ctx:"Surveyors began marking out townships along the river in those same years. No payment ever came, and no treaty was ever signed."},
  {at:56, view:V_VALLEY, y:"1800 · 1806",
-  body:"Philemon Wright settles at the <strong>Chaudière Falls</strong>. Six years later he grasps that the valley&rsquo;s old-growth pine can be squared and floated to the British market.",
-  ctx:"Napoleon&rsquo;s blockade cut Britain off from its Baltic timber in 1807, and behind wartime tariffs colonial wood could suddenly pay its way across the Atlantic &mdash; square-timber exports tripled within three years."},
+  body:"Philemon Wright settles at the <strong>Chaudière Falls</strong>. Six years later he grasps that the valley&rsquo;s old-growth pine can be squared and floated to the British market &mdash; and the industry already thriving on the lower river has a reason to come up this one.",
+  ctx:"The blockade boom arrived the year after Wright&rsquo;s first raft: behind wartime tariffs, even the valley&rsquo;s distant pine was worth the long float downriver."},
  {at:66, view:V_VALLEY, y:"The feedback loop",
   body:"Loggers push upriver for better pine. Farmers follow the timber roads, because the camps pay high prices for <strong>oats and hay</strong>. The camps in turn offer winter wages and a market.",
   ctx:"Each made the other possible: cheap passage out, work and a market on arrival. The ring marks the furthest site the sources record &mdash; watch it move upriver, deeper into unceded Algonquin territory."},
@@ -418,11 +420,13 @@ const YEARS3=[[94,1832],[104,1836],[113,1845],[122,1852],[130,1861]];
    is still on the Quebec–Montreal corridor, so the lower river industrialises
    on screen (1805–1820) before the story turns up the Ottawa — and then the
    documented sites march upriver with the beats. */
-const TIMYRS=[[12,1805],[24,1812],[36,1820],[76,1823],[85,1827]].concat(YEARS3);
+const TIMYRS=[[18,1804],[24,1812],[36,1820],[76,1823],[85,1827]].concat(YEARS3);
 const A3_GRID=92;                 /* the survey grid fades in as the camera closes */
 const A3_TIM=122;                 /* the timber men's holdings light up */
-const A3_PTS=12;                  /* the timber-industry layer switches on */
-const A3_REACH=36;                /* the furthest-site ring, once the story turns upriver */
+const A3_PTS=18;                  /* the timber-industry layer switches on */
+const A3_REACH=66;                /* the furthest-site ring, once the feedback-loop beat names it
+                                     (the beats before it flash back to the 1790s, where a ring
+                                     dated 1821 would read as an anachronism) */
 function yearOn(T,v){
   if(v<=T[0][0]) return T[0][1];
   for(let k=0;k<T.length-1;k++){
@@ -1221,7 +1225,7 @@ function paintUI(v){
       elHeroLab.textContent="documented timber sites";
       elSeason.textContent=vt>=A3_REACH&&far
         ? "the furthest "+far+" km up the Kichi Zībī"
-        : "the lower river industrialises first";
+        : (vt<36?"the lower river industrialises first":"recorded in period sources");
     }else{
       elClock.textContent="Beyond the rapids";
       elHero.textContent=fmt(M.settlers_total);
