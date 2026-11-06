@@ -108,6 +108,14 @@ button:focus-visible{outline:2px solid var(--s1);outline-offset:2px}
 .sp{flex:1}
 .hint{font-size:11.5px;color:var(--ink-3)}
 
+/* Act III self-pacing: while the act is paused, one big button carries on */
+#bigNext{position:absolute;z-index:8;right:26px;bottom:calc(var(--barH,110px) + 22px);
+  padding:13px 26px;font:600 15px/1 inherit;font-family:inherit;letter-spacing:.02em;
+  background:#ffe0ad;color:#0a151d;border:none;border-radius:11px;cursor:pointer;
+  box-shadow:0 4px 18px rgba(0,0,0,.45);transition:transform .15s,background .15s}
+#bigNext:hover{background:#ffeccb;transform:translateY(-1px)}
+@media (max-width:900px){#bigNext{right:12px;padding:11px 20px}}
+
 #tip{position:absolute;z-index:9;pointer-events:none;background:var(--panel);border:1px solid var(--rule);
   border-radius:9px;padding:9px 12px;font-size:12.5px;line-height:1.5;opacity:0;transition:opacity .12s;
   backdrop-filter:blur(9px);max-width:230px}
@@ -211,7 +219,6 @@ td{color:var(--ink-2)} td:first-child{color:var(--ink)}
       <button id="bAct3">III &middot; Beyond the Rapids</button>
       <button id="bSpeed">1&times;</button>
       <button id="bReplay">Replay</button>
-      <button id="bStep" style="display:none">Next beat</button>
       <button id="bNext">Continue &rarr;</button>
       <div class="sp"></div>
       <span class="hint" id="hint">Drag the timeline &middot; hover a port for detail</span>
@@ -219,6 +226,7 @@ td{color:var(--ink-2)} td:first-child{color:var(--ink)}
     </div>
   </div>
 
+  <button id="bigNext" style="display:none">Next &rarr;</button>
   <div id="tip"></div>
 </div>
 
@@ -334,6 +342,11 @@ const V_VALLEY  ={lon0:-78.4,lon1:-73.6,lat0:44.9,lat1:46.7};
 const V_QUEBEC  ={lon0:-72.6,lon1:-70.2,lat0:46.15,lat1:47.15};
 /* Lake Champlain and the Richelieu, with Montreal at the top of frame */
 const V_CHAMPLAIN={lon0:-75.2,lon1:-71.6,lat0:44.3,lat1:45.85};
+
+/* the Richelieu, Sorel to the head of Lake Champlain, as (lon, lat) waypoints
+   in the basemap's river style — hand-placed, like the sea lanes */
+const RICHELIEU=[[-73.12,46.03],[-73.14,45.93],[-73.14,45.78],[-73.20,45.62],
+                 [-73.28,45.47],[-73.26,45.30],[-73.28,45.12],[-73.34,45.03]];
 /* deepest zoom still holds the whole run of river from the Chaudière to
    Allumette Island — any tighter and the frame is empty land */
 const V_WEST    ={lon0:-77.8,lon1:-75.4,lat0:45.3,lat1:46.25};
@@ -352,7 +365,8 @@ const ROUTE=[[46.81,-71.21],[46.55,-71.95],[46.34,-72.54],[46.05,-73.12],[45.75,
 const PLACES=[
   {n:"Quebec",              lat:46.814,lon:-71.208,at:0},
   {n:"Etchemin Mills",      lat:46.745,lon:-71.235,at:13},
-  {n:"Lake Champlain",      lat:44.750,lon:-73.250,at:27},
+  {n:"Lake Champlain",      lat:44.750,lon:-73.250,at:27,lab:1},
+  {n:"VERMONT",             lat:44.450,lon:-72.550,at:27,lab:1},
   {n:"Montreal",            lat:45.502,lon:-73.567,at:28},
   {n:"Trois-Rivières", lat:46.343,lon:-72.543,at:42},
   {n:"Hawkesbury",          lat:45.607,lon:-74.615,at:44},
@@ -582,6 +596,10 @@ function drawBase(){
     gMap.globalAlpha=aInland*aRiv;
     gMap.strokeStyle="#3d6b8c";gMap.lineWidth=Math.max(1.2,Math.min(4,SC/28));
     for(const ring of INLAND.rivers){ poly(gMap,ring,false); gMap.stroke(); }
+    /* the Richelieu is missing from the Natural Earth river set, but Act III
+       sends the Champlain timber down it, so it is hand-placed here in the
+       same style (Sorel to the head of Lake Champlain) */
+    poly(gMap,RICHELIEU,false); gMap.stroke();
     if(aHydro>0.01){
       /* river, lakes and islands — islands are holes, so the land shows through */
       const wx0=VIEW.lon0,wx1=VIEW.lon1,wy0=myOf(VIEW.lat0),wy1=myOf(VIEW.lat1);
@@ -1200,6 +1218,15 @@ function render3(){
     const t=Math.min(1,(vt-pl.at)/4);
     const x=px(pl.lon),y=py(pl.lat);
     if(x<-40||x>W+40||y<-40||y>H+40) continue;
+    if(pl.lab){
+      /* a region or water label: text only, centred, no marker to mistake
+         for a documented site */
+      gFx.textAlign="center";
+      gFx.fillStyle="rgba(195,194,183,"+(.8*t).toFixed(2)+")";
+      gFx.fillText(pl.n,x,y+4);
+      gFx.textAlign="left";
+      continue;
+    }
     gFx.fillStyle="rgba(255,224,173,"+(.95*t).toFixed(2)+")";
     gFx.beginPath();gFx.arc(x,y,3.4,0,7);gFx.fill();
     gFx.strokeStyle="rgba(255,224,173,"+(.34*t).toFixed(2)+")";gFx.lineWidth=1;
@@ -1467,8 +1494,7 @@ function setAct(a,at){
   $("bAct2").classList.toggle("on",a===2);
   $("bAct3").classList.toggle("on",a===3);
   $("panel").style.opacity=a===3?0:1;
-  $("bStep").style.display=a===3?"":"none";
-  pauseAt=null;
+  pauseAt=null;updNext();
   /* Act I is a static map: no clock, no transport */
   $("bar").classList.toggle("static",a===1);
   $("cargoBar").style.display=a===1?"flex":"none";
@@ -1504,13 +1530,16 @@ function seek(v){
   pauseAt=null;                   /* a manual seek cancels a pending beat stop */
   if(act===3){ flow.length=0; step3(vt); paintUI(vt); }
   else { rebuild(vt); checkNote(vt); }
+  updNext();
 }
-const setPlayBtn=()=>{$("bPlay").textContent=playing?"Pause":"Play";};
+/* the big Next button shows whenever Act III is paused short of the end */
+const updNext=()=>{$("bigNext").style.display=(act===3&&!playing&&vt<A3MAX-0.5)?"":"none";};
+const setPlayBtn=()=>{$("bPlay").textContent=playing?"Pause":"Play";updNext();};
 
-/* Act III at the visitor's pace: play on to the next beat, then wait there.
-   Play still runs the act straight through for anyone who prefers to watch. */
+/* Act III at the visitor's pace: Next plays on to the next beat, then waits
+   there. Play still runs the act straight through for anyone who watches. */
 let pauseAt=null;
-$("bStep").onclick=()=>{
+$("bigNext").onclick=()=>{
   const nb=BEATS.find(b=>b.at>vt+0.01);
   pauseAt=nb?nb.at:A3MAX;
   playing=true;setPlayBtn();
