@@ -211,6 +211,7 @@ td{color:var(--ink-2)} td:first-child{color:var(--ink)}
       <button id="bAct3">III &middot; Beyond the Rapids</button>
       <button id="bSpeed">1&times;</button>
       <button id="bReplay">Replay</button>
+      <button id="bStep" style="display:none">Next beat</button>
       <button id="bNext">Continue &rarr;</button>
       <div class="sp"></div>
       <span class="hint" id="hint">Drag the timeline &middot; hover a port for detail</span>
@@ -896,6 +897,10 @@ function frame(ts){
   if(playing&&!dragging){
     const rate=act===3?1:VT_PER_SEC;               /* Act III clock runs in seconds */
     advance(vt+dt*rate*SPEEDS[speedIx]);
+    if(act===3&&pauseAt!=null&&vt>=pauseAt){       /* "Next beat" stops here */
+      advance(pauseAt);pauseAt=null;
+      if(vt<maxT){playing=false;setPlayBtn();}
+    }
     if(vt>=maxT){playing=false;setPlayBtn();onActEnd();}
   }
   act===3?render3():render();
@@ -1462,6 +1467,8 @@ function setAct(a,at){
   $("bAct2").classList.toggle("on",a===2);
   $("bAct3").classList.toggle("on",a===3);
   $("panel").style.opacity=a===3?0:1;
+  $("bStep").style.display=a===3?"":"none";
+  pauseAt=null;
   /* Act I is a static map: no clock, no transport */
   $("bar").classList.toggle("static",a===1);
   $("cargoBar").style.display=a===1?"flex":"none";
@@ -1494,10 +1501,20 @@ function paintTrade(){
 function seek(v){
   const maxT=act===3?A3MAX:VTMAX;
   vt=Math.max(0,Math.min(maxT,v));
+  pauseAt=null;                   /* a manual seek cancels a pending beat stop */
   if(act===3){ flow.length=0; step3(vt); paintUI(vt); }
   else { rebuild(vt); checkNote(vt); }
 }
 const setPlayBtn=()=>{$("bPlay").textContent=playing?"Pause":"Play";};
+
+/* Act III at the visitor's pace: play on to the next beat, then wait there.
+   Play still runs the act straight through for anyone who prefers to watch. */
+let pauseAt=null;
+$("bStep").onclick=()=>{
+  const nb=BEATS.find(b=>b.at>vt+0.01);
+  pauseAt=nb?nb.at:A3MAX;
+  playing=true;setPlayBtn();
+};
 
 let seen={1:false,2:false,3:false};
 function onActEnd(){
