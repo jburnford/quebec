@@ -1532,8 +1532,10 @@ function seek(v){
   else { rebuild(vt); checkNote(vt); }
   updNext();
 }
-/* the big Next button shows whenever Act III is paused short of the end */
-const updNext=()=>{$("bigNext").style.display=(act===3&&!playing&&vt<A3MAX-0.5)?"":"none";};
+/* the big Next button rides along for all of Act III: while playing it skips
+   ahead to the next beat; at a stop it carries on — either way it then waits
+   there, so first-time visitors discover they can set the pace */
+const updNext=()=>{$("bigNext").style.display=(act===3&&vt<A3MAX-0.5)?"":"none";};
 const setPlayBtn=()=>{$("bPlay").textContent=playing?"Pause":"Play";updNext();};
 
 /* Act III at the visitor's pace: Next plays on to the next beat, then waits
