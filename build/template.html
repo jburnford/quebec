@@ -113,6 +113,9 @@ button:focus-visible{outline:2px solid var(--s1);outline-offset:2px}
   backdrop-filter:blur(9px);max-width:230px}
 #tip b{display:block;color:var(--ink);font-weight:620;margin-bottom:3px}
 #tip span{color:var(--ink-2);font-variant-numeric:tabular-nums}
+#tip.wide{max-width:320px}
+#tip em{color:var(--ink-2);font-style:italic}
+#tip .tsrc{display:block;margin-top:3px;color:var(--ink-3);font-size:11px;line-height:1.4}
 
 .veil{position:fixed;inset:0;z-index:20;background:rgba(6,12,17,.94);backdrop-filter:blur(5px);
   display:flex;align-items:center;justify-content:center;padding:34px;opacity:0;visibility:hidden;
@@ -283,6 +286,7 @@ const COAST  = /*__COAST__*/;
 const INLAND = /*__INLAND__*/;
 const WM     = /*__WESTMEATH__*/;
 const HYDRO  = /*__HYDRO__*/;
+const TIMBER = /*__TIMBER__*/;
 
 /* ============================ constants ============================ */
 const M=DATA.meta, V=DATA.voyages, P=DATA.ports, VT=DATA.vt, VTMAX=M.vtmax;
@@ -366,22 +370,23 @@ const BEATS=[
  {at:0, view:V_GULF, y:"1817–1839",
   body:"Every crossing in the last two acts ended here. <strong>"+"{SET}"+" settlers</strong> came ashore at Quebec in twenty-three seasons &mdash; and then walked out of the record."},
  {at:12, view:V_CORRIDOR, y:"Up the St Lawrence",
-  body:"They moved inland by river. Montreal first &mdash; and from Montreal, in every direction."},
+  body:"They moved inland by river. Montreal first &mdash; and from Montreal, in every direction. The timber industry travelled ahead of them: <strong>sawmills</strong> (squares), <strong>timber slides and dams</strong> (diamonds) and <strong>recorded pine stands</strong> (dots) appear as period sources first document them.",
+  ctx:"Quebec merchants were investing before the trade boomed: Henry Caldwell&rsquo;s Etchemin mill opposite Quebec was sawing by 1804, the Hawkesbury mill on the lower Ottawa by 1805 &mdash; and in the earliest years most oak and pine shipped from Quebec actually came through Lake Champlain, south of the border."},
  {at:24, view:V_DEST, y:"Quebec was not a destination",
   body:"Most pushed on into <strong>Upper Canada</strong>, filling the townships of what is now southern Ontario. Others took up land in the <strong>Eastern Townships</strong>; many thousands carried on into the <strong>United States</strong>.",
   ctx:"Upper Canada counted 150,066 people in 1824 and 487,053 by 1842. This act follows only one of these routes."},
  {at:36, view:V_VALLEY, y:"One valley of many",
-  body:"We take the <strong>Ottawa Valley</strong> &mdash; the Kichi Zībī &mdash; because it is where the timber trade and settlement are most tightly bound together. It is a case study, not the whole story.",
+  body:"We take the <strong>Ottawa Valley</strong> &mdash; the Kichi Zībī &mdash; because by the 1820s it was becoming the centre of timber extraction, and it is where the trade and settlement are most tightly bound together. It is a case study, not the whole story.",
   ctx:"This is the territory of the Algonquin nation. Under the Royal Proclamation of 1763 the Crown was required to negotiate for Indigenous land before settlement. Here it never did, and the territory is unceded to this day."},
  {at:46, view:V_VALLEY, y:"1791 · 1798",
   body:"Before the loggers came, the <strong>Algonquin and Nipissing chiefs</strong> put their ownership on record. In 1791 they told Lord Dorchester they had not sold their lands on the Ottawa. In 1798 they were assured that <em class=\"q\">&ldquo;the King never took the land of his children without paying for them.&rdquo;</em>",
   ctx:"Surveyors began marking out townships along the river in those same years. No payment ever came, and no treaty was ever signed."},
  {at:56, view:V_VALLEY, y:"1800 · 1806",
   body:"Philemon Wright settles at the <strong>Chaudière Falls</strong>. Six years later he grasps that the valley&rsquo;s old-growth pine can be squared and floated to the British market.",
-  ctx:"The timber trade that filled those westbound holds began here."},
+  ctx:"Napoleon&rsquo;s blockade cut Britain off from its Baltic timber in 1807, and behind wartime tariffs colonial wood could suddenly pay its way across the Atlantic &mdash; square-timber exports tripled within three years."},
  {at:66, view:V_VALLEY, y:"The feedback loop",
   body:"Loggers push upriver for better pine. Farmers follow the timber roads, because the camps pay high prices for <strong>oats and hay</strong>. The camps in turn offer winter wages and a market.",
-  ctx:"Each made the other possible: cheap passage out, work and a market on arrival."},
+  ctx:"Each made the other possible: cheap passage out, work and a market on arrival. The ring marks the furthest site the sources record &mdash; watch it move upriver, deeper into unceded Algonquin territory."},
  {at:76, view:V_VALLEY, y:"Early 1820s",
   body:"Settlement reaches the <strong>Lac des Chats</strong>, then stalls at the Rocher Fendu Rapids &mdash; a long, broken stretch of white water at Grand Calumet Island.",
   ctx:"The Algonquin petitioned Lord Dalhousie in 1820: of all the Crown&rsquo;s Indigenous allies from the War of 1812, they alone had been left without a grant of land."},
@@ -404,20 +409,29 @@ const BEATS=[
   body:"<em class=\"q\">&ldquo;Our hunting grounds are entirely ruined,&rdquo;</em> the Algonquin petition in 1840. In 1845 the Bagot Commission recommends against the Allumette reserve: a <em class=\"q\">&ldquo;large white population&rdquo;</em> &mdash; some 800 squatters &mdash; is already on the island. It is surveyed as a township two years later.",
   ctx:"A decade of illegal clearing outweighed occupation since time immemorial, the Royal Proclamation, and the Crown&rsquo;s own acknowledgements."},
  {at:137, view:V_VALLEY, y:"The valley by 1852",
-  body:"<strong>85,578</strong> settlers on the Upper Canada side of the valley and <strong>22,903</strong> on the Lower Canada side; a quarter of them born in Ireland. Logging had changed the forest&rsquo;s composition. Farming erased it &mdash; and the fields cleared by the 1860s are farmland still."}
+  body:"<strong>85,578</strong> settlers on the Upper Canada side of the valley and <strong>22,903</strong> on the Lower Canada side; a quarter of them born in Ireland. Logging had changed the forest&rsquo;s composition. Farming erased it &mdash; and the fields cleared by the 1860s are farmland still.",
+  ctx:"Where the loggers passed, the forest grew back &mdash; but not the same forest. The old-growth white and red pine did not return; other species took their place, and later logging chased a moving frontier rather than any regrowth. Supplying Britain consumed the pine of over two million acres: roughly all the forest left in the British Isles."}
 ];
 /* the story year that drives the lot fill, keyed to the beats above */
 const YEARS3=[[94,1832],[104,1836],[113,1845],[122,1852],[130,1861]];
+/* a longer clock for the timber-industry points. It starts while the camera
+   is still on the Quebec–Montreal corridor, so the lower river industrialises
+   on screen (1805–1820) before the story turns up the Ottawa — and then the
+   documented sites march upriver with the beats. */
+const TIMYRS=[[12,1805],[24,1812],[36,1820],[76,1823],[85,1827]].concat(YEARS3);
 const A3_GRID=92;                 /* the survey grid fades in as the camera closes */
 const A3_TIM=122;                 /* the timber men's holdings light up */
-function storyYear(v){
-  if(v<=YEARS3[0][0]) return YEARS3[0][1];
-  for(let k=0;k<YEARS3.length-1;k++){
-    const [a,ya]=YEARS3[k],[b,yb]=YEARS3[k+1];
+const A3_PTS=12;                  /* the timber-industry layer switches on */
+const A3_REACH=36;                /* the furthest-site ring, once the story turns upriver */
+function yearOn(T,v){
+  if(v<=T[0][0]) return T[0][1];
+  for(let k=0;k<T.length-1;k++){
+    const [a,ya]=T[k],[b,yb]=T[k+1];
     if(v<b) return ya+(yb-ya)*(v-a)/(b-a);
   }
-  return YEARS3[YEARS3.length-1][1];
+  return T[T.length-1][1];
 }
+const storyYear=v=>yearOn(YEARS3,v), timYear=v=>yearOn(TIMYRS,v);
 
 /* ============================ projection ============================ */
 let VIEW={...V_ATLANTIC};
@@ -446,6 +460,11 @@ function lerpView(a,b,t){
 
 /* Westmeath lot fabric in (lon, mercatorY), projected once */
 const WLOTS=WM.lots.map(l=>({p:l.r.map(([lo,la])=>[lo,myOf(la)]),y:l.y||0,tim:l.tim||""}));
+
+/* timber-industry points (mills, river works, recorded stands), projected once.
+   y:0 marks an undated point: it shows from the moment the layer is on. */
+const TPTS=TIMBER.pts.map(([lo,la,y,c,k,n,q,s,d])=>
+  ({lon:lo,lat:la,my:myOf(la),y,c,k,n,q,s,d}));
 
 /* detailed upper-Ottawa water (OSM), projected once, with a bbox for culling.
    Natural Earth linework hands over to these polygons at township zoom. */
@@ -1045,6 +1064,67 @@ function render3(){
     }
   }
 
+  /* the timber industry, from a point layer compiled from period sources:
+     sawmills (squares), timber slides, booms and dams (diamonds), and recorded
+     pine and timber stands (dots). Each appears as the story clock passes the
+     year its source records, flashing brighter on arrival, then settling. */
+  if(vt>=A3_PTS){
+    const tA=Math.min(1,(vt-A3_PTS)/5);
+    const span=VIEW.lon1-VIEW.lon0;
+    const zA=Math.max(.3,Math.min(1,(span-.7)/1.0));  /* recede at township zoom */
+    const yr=timYear(vt);
+    const CPT=["255,210,130","125,195,215","142,186,110"];  /* mill, works, stand */
+    for(const p of TPTS){
+      if(p.y>yr||!inWin(p.lat,p.lon)) continue;
+      const age=Math.max(0,Math.min(1,(yr-p.y)/2));
+      const a=((.55+.4*(1-age))*tA*zA).toFixed(3);
+      const x=px(p.lon),y=OY-p.my*SC;
+      gFx.fillStyle="rgba("+CPT[p.c]+","+a+")";
+      if(p.c===0){                                    /* sawmill: square */
+        gFx.fillRect(x-2.4,y-2.4,4.8,4.8);
+      }else if(p.c===1){                              /* river works: diamond */
+        gFx.beginPath();gFx.moveTo(x,y-3.4);gFx.lineTo(x+3.4,y);
+        gFx.lineTo(x,y+3.4);gFx.lineTo(x-3.4,y);gFx.closePath();gFx.fill();
+      }else{                                          /* timber stand: dot */
+        gFx.beginPath();gFx.arc(x,y,2.3,0,7);gFx.fill();
+      }
+    }
+  }
+
+  /* the furthest site the sources record, measured along the river from
+     Montreal — the leading edge of the trade pushing deeper into unceded
+     territory. Ringed where it sits; pinned to the frame edge when the
+     camera has not followed it that far. */
+  if(vt>=A3_REACH){
+    /* recede with the camera: at township zoom the ring (usually far off
+       frame by then) would only distract from the Westmeath story */
+    const zR=Math.max(0,Math.min(1,((VIEW.lon1-VIEW.lon0)-1.2)/0.8));
+    const t=Math.min(1,(vt-A3_REACH)/5)*zR;
+    const yr=timYear(vt);
+    let far=null;
+    for(const p of TPTS) if(p.d!=null&&p.y&&p.y<=yr&&(!far||p.d>far.d)) far=p;
+    if(far&&t>0.02){
+      let x=px(far.lon),y=OY-far.my*SC;
+      const inV=inWin(far.lat,far.lon);
+      if(!inV){x=Math.max(26,Math.min(W-26,x));y=Math.max(170,Math.min(H-190,y));}
+      gFx.strokeStyle="rgba(255,224,173,"+(.85*t).toFixed(2)+")";gFx.lineWidth=1.4;
+      gFx.beginPath();gFx.arc(x,y,7.5,0,7);gFx.stroke();
+      gFx.strokeStyle="rgba(255,224,173,"+(.3*t).toFixed(2)+")";
+      gFx.beginPath();gFx.arc(x,y,12.5,0,7);gFx.stroke();
+      const fam=getComputedStyle(document.body).fontFamily;
+      const right=x>W-215;
+      gFx.textAlign=right?"right":"left";
+      const lx=right?x-18:x+18;
+      gFx.font="600 11.5px "+fam;
+      gFx.fillStyle="rgba(255,255,255,"+(.9*t).toFixed(2)+")";
+      gFx.fillText("furthest documented timber site",lx,y-2);
+      gFx.font="11px "+fam;
+      gFx.fillStyle="rgba(195,194,183,"+(.85*t).toFixed(2)+")";
+      gFx.fillText((far.y?far.y+" · ":"")+far.d+" km upriver"+(inV?"":" · beyond this frame"),lx,y+12);
+      gFx.textAlign="left";
+    }
+  }
+
   /* the route travelled so far. Like the basemap river, its waypoints are
      schematic, so it dims at township zoom rather than crossing the fabric */
   const spanNow=VIEW.lon1-VIEW.lon0;
@@ -1130,6 +1210,18 @@ function paintUI(v){
       elHero.textContent=fmt(n);
       elHeroLab.textContent="lots granted or sold";
       elSeason.textContent="of "+fmt(WLOTS.length)+" surveyed parcels";
+    }else if(vt>=A3_PTS+3&&vt<137){
+      /* the readout follows the timber layer: how many sites the sources
+         have recorded so far, and how far up the valley the trade has gone */
+      const yr=Math.floor(timYear(vt));
+      let n=0,far=0;
+      for(const p of TPTS){if(p.y&&p.y<=yr){n++;if(p.d!=null&&p.d>far)far=p.d;}}
+      elClock.innerHTML="The timber trade &middot; "+yr;
+      elHero.textContent=fmt(n);
+      elHeroLab.textContent="documented timber sites";
+      elSeason.textContent=vt>=A3_REACH&&far
+        ? "the furthest "+far+" km up the Kichi Zībī"
+        : "the lower river industrialises first";
     }else{
       elClock.textContent="Beyond the rapids";
       elHero.textContent=fmt(M.settlers_total);
@@ -1194,9 +1286,12 @@ function paintLegend(){
   else if(act===2) items=MAIN_REG.map(r=>({c:REG[r].col,l:REG[r].name}))
                     .concat([{c:REG.BNA.col,l:"Elsewhere"}]);
   else items=[{c:"#ffe0ad",l:"Route inland from Quebec"},
+              {c:"#ffd282",l:"Sawmills"},
+              {c:"#7dc3d7",l:"Timber slides, booms and dams"},
+              {c:"#8eba6e",l:"Recorded pine and timber stands"},
               {c:"#c98500",l:"Westmeath lots by year of first Crown grant or sale"},
               {c:"#d95926",l:"Holdings of documented timber men"},
-              {c:"#8b8f96",l:"Act III is drawn from Clifford &amp; Huckerby (2025), not the arrivals data"}];
+              {c:"#8b8f96",l:"Act III is drawn from Clifford &amp; Huckerby (2025), not the arrivals data &mdash; hover a timber mark for the document behind it"}];
   let html=items.map(i=>
     '<div class="lg"><span class="sw" style="background:'+i.c+'"></span>'+i.l+'</div>').join("");
   if(act===2){
@@ -1427,7 +1522,31 @@ window.addEventListener("touchend",()=>dragging=false);
 
 const elTip=$("tip");
 cFx.addEventListener("mousemove",e=>{
-  if(act===3){elTip.style.opacity=0;return;}
+  if(act===3){
+    /* the timber layer is the only thing to probe in Act III. Every point
+       carries the note and citation from the source layer, so hovering a
+       mark opens the document behind it. */
+    if(vt<A3_PTS){elTip.style.opacity=0;return;}
+    const yr=timYear(vt);
+    let best=null,bd=196;                      /* within 14 px */
+    for(const p of TPTS){
+      if(p.y>yr||!inWin(p.lat,p.lon)) continue;
+      const dx=px(p.lon)-e.clientX,dy=(OY-p.my*SC)-e.clientY,d=dx*dx+dy*dy;
+      if(d<bd){bd=d;best=p;}
+    }
+    if(!best){elTip.style.opacity=0;return;}
+    const KIND=["Sawmill","River works","Timber"];
+    elTip.classList.add("wide");
+    elTip.innerHTML='<b>'+esc(best.n||best.k||KIND[best.c])+'</b><span>'+
+      esc(best.k||KIND[best.c])+(best.y?' &middot; '+best.y:'')+
+      (best.q?'<br><em>&ldquo;'+esc(best.q)+'&rdquo;</em>':'')+
+      (best.s?'<span class="tsrc">'+esc(best.s)+'</span>':'')+'</span>';
+    elTip.style.opacity=1;
+    elTip.style.left=Math.min(W-elTip.offsetWidth-8,e.clientX+14)+"px";
+    elTip.style.top=Math.max(8,e.clientY-elTip.offsetHeight-12)+"px";
+    return;
+  }
+  elTip.classList.remove("wide");
   let best=-1,bd=225;
   for(let pi=0;pi<P.length;pi++){
     const live=act===1?portCount(P[pi],tradeFilter):portAcc[pi];
@@ -1509,6 +1628,31 @@ function buildTable(){
    '<li>Highlighted holdings are individuals the article documents in both farming and the timber '+
      'trade (John Egan, Hugh Carmichael, Caleb Bellows, Samuel Adams, George Tucker), matched by '+
      'name in the patent index — holdings recorded under other names are missed.</li>'+
+   '<li>The timber-industry marks — '+fmt(TIMBER.meta.mills)+' sawmills, '+fmt(TIMBER.meta.works)+
+     ' timber slides, booms and dams, and '+fmt(TIMBER.meta.stands)+' recorded pine and timber '+
+     'stands — are a point layer compiled by Jim Clifford (2020) from period sources: Alexander '+
+     'Sherriff’s 1829 <em>Topographical Notices</em>, gazetteers and county histories, each point '+
+     'dated and cited in the source layer. Points appear as the story reaches the year their '+
+     'source records ('+TIMBER.meta.undated+' undated points show throughout); locations after '+
+     '1861 never appear, because the story ends first. The layer underpins Jim Clifford and '+
+     'Stéphane Castonguay, “British ghost acres and environmental changes in the Laurentian '+
+     'forest during the nineteenth century,” <em>Journal of Historical Geography</em> 78 (2022), '+
+     'doi:10.1016/j.jhg.2022.05.002.</li>'+
+   '<li>The ring follows the furthest Ottawa-watershed site the sources have recorded so far, '+
+     'with its distance measured along a schematic river line from Montreal (tributary sites '+
+     'count by how far up the valley they sit, so the figure is approximate). By 1837 it '+
+     'reaches Lake Timiskaming, 480 km upriver. The early lower-river story — the Etchemin '+
+     'and Hawkesbury mills, and the Lake Champlain region supplying most of the oak and pine '+
+     'shipped from Quebec before 1812 — follows Jim Clifford, Joshua MacFadyen and Stéphane '+
+     'Castonguay’s chapter “Mapping Commodity Histories: Historical GIS and Canadian Forest '+
+     'Products.”</li>'+
+   '<li>The ecological close of Act III is from that article: three-quarters of the wood shipped '+
+     'from the St Lawrence to Britain was white and red pine, and supplying it consumed the pine '+
+     'of some 2.3 million acres — roughly equal to all the forest remaining in the British '+
+     'Isles. Selective logging transformed rather than destroyed the Laurentian forest: most '+
+     'logged regions were still wooded in 1900, but the mature pine was gone, other species '+
+     'grew in its place, and the industry survived by moving its frontier, not by harvesting '+
+     'regrowth.</li>'+
    '<li>That article also finds that the top twenty Quebec merchants receiving ships with settlers '+
      'took 54% of all settlers in this database, and that thirty-nine of the top forty were shipping '+
      'timber to the United Kingdom. The merchant column is in the source file but is not charted here, '+

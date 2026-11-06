@@ -216,6 +216,7 @@ sub = {
     "/*__INLAND__*/": io.open(os.path.join(HERE, "inland.json"), encoding="utf-8").read(),
     "/*__WESTMEATH__*/": io.open(os.path.join(HERE, "westmeath.json"), encoding="utf-8").read(),
     "/*__HYDRO__*/": io.open(os.path.join(HERE, "hydro.json"), encoding="utf-8").read(),
+    "/*__TIMBER__*/": io.open(os.path.join(HERE, "timber.json"), encoding="utf-8").read(),
 }
 for token, value in sub.items():
     assert token in tpl, f"missing token {token} in template.html"
